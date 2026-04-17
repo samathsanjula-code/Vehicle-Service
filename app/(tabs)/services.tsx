@@ -1,112 +1,219 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { ScrollView, View, Text, Pressable, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
 
-export default function TabTwoScreen() {
+// ─── Data ────────────────────────────────────────────────────────────────────
+
+type ServiceItem = {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  name: string;
+  description: string;
+  features: string[];
+  accent: string;
+  accentBg: string;
+};
+
+const services: ServiceItem[] = [
+  {
+    icon: 'build',
+    name: 'Mechanical Repairs',
+    description: 'Expert mechanical diagnostics and repairs for all makes and models',
+    features: ['Engine diagnostics', 'Brake repair', 'Transmission service', 'Suspension work'],
+    accent: '#2563eb',
+    accentBg: '#eff6ff',
+  },
+  {
+    icon: 'car',
+    name: 'Collision Repairs',
+    description: 'Professional bodywork and paint services',
+    features: ['Dent removal', 'Paint matching', 'Frame straightening', 'Insurance claims'],
+    accent: '#dc2626',
+    accentBg: '#fef2f2',
+  },
+  {
+    icon: 'water',
+    name: 'Lubrication Services',
+    description: 'Oil changes and fluid maintenance',
+    features: ['Oil change', 'Filter replacement', 'Fluid top-ups', 'Lubrication points'],
+    accent: '#d97706',
+    accentBg: '#fffbeb',
+  },
+  {
+    icon: 'sparkles',
+    name: 'Vehicle Detailing',
+    description: 'Complete interior and exterior cleaning',
+    features: ['Exterior wash & wax', 'Interior vacuuming', 'Leather treatment', 'Engine cleaning'],
+    accent: '#7c3aed',
+    accentBg: '#f5f3ff',
+  },
+  {
+    icon: 'resize',
+    name: 'Wheel Alignment',
+    description: 'Precision alignment for optimal performance',
+    features: ['4-wheel alignment', 'Tire balancing', 'Steering adjustment', 'Suspension check'],
+    accent: '#16a34a',
+    accentBg: '#f0fdf4',
+  },
+];
+
+// ─── Component ───────────────────────────────────────────────────────────────
+
+export default function ServicesScreen() {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}>
+
+        {/* Header */}
+        <ThemedView style={styles.header}>
+          <ThemedText type="title" style={styles.headerTitle}>Our Services</ThemedText>
+          <ThemedText style={styles.headerSubtitle}>
+            Professional automotive care for your vehicle
+          </ThemedText>
+        </ThemedView>
+
+        {/* Service Cards */}
+        {services.map((service) => (
+          <View key={service.name} style={[styles.card, { borderLeftColor: service.accent }]}>
+            {/* Card Header */}
+            <View style={styles.cardHeader}>
+              <View style={[styles.iconBox, { backgroundColor: service.accentBg }]}>
+                <Ionicons name={service.icon} size={24} color={service.accent} />
+              </View>
+              <View style={styles.cardHeadText}>
+                <ThemedText type="defaultSemiBold" style={styles.cardName}>
+                  {service.name}
+                </ThemedText>
+                <ThemedText style={styles.cardDescription}>{service.description}</ThemedText>
+              </View>
+            </View>
+
+            {/* Features */}
+            <View style={styles.featureList}>
+              {service.features.map((feature) => (
+                <View key={feature} style={styles.featureRow}>
+                  <Ionicons name="chevron-forward" size={14} color={service.accent} />
+                  <ThemedText style={styles.featureText}>{feature}</ThemedText>
+                </View>
+              ))}
+            </View>
+
+            {/* Book Button */}
+            <Pressable
+              style={({ pressed }) => [
+                styles.bookBtn,
+                { backgroundColor: service.accent },
+                pressed && { opacity: 0.85 },
+              ]}
+              onPress={() => router.push('/appointments')}>
+              <Text style={styles.bookBtnText}>Book Service</Text>
+            </Pressable>
+          </View>
+        ))}
+
+        <View style={styles.bottomSpacer} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
+// ─── Styles ──────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f9fafb',
   },
-  titleContainer: {
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  header: {
+    paddingHorizontal: 8,
+    paddingVertical: 20,
+    backgroundColor: 'transparent',
+  },
+  headerTitle: {
+    color: '#111827',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    color: '#6b7280',
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  cardHeader: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 14,
+    marginBottom: 16,
+  },
+  iconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardHeadText: {
+    flex: 1,
+  },
+  cardName: {
+    fontSize: 17,
+    color: '#111827',
+    marginBottom: 4,
+  },
+  cardDescription: {
+    color: '#6b7280',
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  featureList: {
     gap: 8,
+    marginBottom: 16,
+    paddingLeft: 4,
+  },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  featureText: {
+    fontSize: 13,
+    color: '#374151',
+  },
+  bookBtn: {
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  bookBtnText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
+    letterSpacing: 0.3,
+  },
+  bottomSpacer: {
+    height: 24,
   },
 });
