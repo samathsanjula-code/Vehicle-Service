@@ -204,8 +204,8 @@ export default function HomeScreen() {
             </View>
             <Pressable
               style={styles.phoneBox}
-              onPress={() => Linking.openURL('tel:0755004004')}>
-              <Text style={styles.phoneNumber}>0755 004 004</Text>
+              onPress={() => Linking.openURL('tel:0710851297')}>
+              <Text style={styles.phoneNumber}>0710 851 297</Text>
             </Pressable>
             <View style={styles.emergencyFooter}>
               <Ionicons name="call-outline" size={16} color="rgba(255,255,255,0.9)" />

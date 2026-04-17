@@ -36,59 +36,18 @@ type ServiceRecord = {
   status: string;
 };
 
-const vehicles: Vehicle[] = [
-  {
-    id: 1,
-    name: 'BMW 5 Series',
-    plate: 'WP CAR-8672 • 2019',
-    image: vehicleImages.bmw,
-    status: 'HEALTHY',
-    statusColor: '#16a34a',
-    statusDot: '#22c55e',
-    healthy: true,
-  },
-  {
-    id: 2,
-    name: 'Porsche 911',
-    plate: 'WP CAR-9110 • 2021',
-    image: vehicleImages.porsche,
-    status: 'SERVICE DUE: 5 DAYS',
-    statusColor: '#dc2626',
-    statusDot: '#ef4444',
-    healthy: false,
-  },
-];
-
-const serviceHistory: ServiceRecord[] = [
-  {
-    id: 1,
-    service: 'Full Engine Service',
-    date: 'March 15, 2026',
-    vehicle: 'BMW 5 Series',
-    cost: 'LKR 45,000',
-    status: 'Completed',
-  },
-  {
-    id: 2,
-    service: 'Oil Change & Filter',
-    date: 'February 20, 2026',
-    vehicle: 'Porsche 911',
-    cost: 'LKR 18,500',
-    status: 'Completed',
-  },
-  {
-    id: 3,
-    service: 'Brake Pad Replacement',
-    date: 'January 10, 2026',
-    vehicle: 'BMW 5 Series',
-    cost: 'LKR 32,000',
-    status: 'Completed',
-  },
-];
+const vehicles: Vehicle[] = [];
+const serviceHistory: ServiceRecord[] = [];
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
+import { Redirect, useRouter } from 'expo-router';
+import { useAuth } from '../../context/AuthContext';
+
 export default function ProfileScreen() {
+  const { user, logout } = useAuth();
+  const router = useRouter();
+  
   const handleAddCar = () => {
     Alert.alert('Add Vehicle', 'This feature is coming soon!');
   };
@@ -96,6 +55,21 @@ export default function ProfileScreen() {
   const handleEditProfile = () => {
     Alert.alert('Edit Profile', 'Profile editing coming soon!');
   };
+
+  if (!user) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Ionicons name="lock-closed" size={48} color="#9ca3af" style={{ marginBottom: 16 }} />
+        <ThemedText type="subtitle" style={{ marginBottom: 8, color: '#1f2937' }}>Authentication Required</ThemedText>
+        <ThemedText style={{ marginBottom: 24, color: '#6b7280' }}>Please log in to view your profile.</ThemedText>
+        <Pressable
+          style={({ pressed }) => [styles.addCarBtn, pressed && { opacity: 0.85 }]}
+          onPress={() => router.push('/(auth)/login')}>
+          <Text style={styles.addCarBtnText}>Log In Now</Text>
+        </Pressable>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom']}>
@@ -105,24 +79,27 @@ export default function ProfileScreen() {
         <View style={styles.profileHeader}>
           <View style={styles.avatarWrapper}>
             <View style={styles.avatarCircle}>
-              <Text style={styles.avatarInitials}>KP</Text>
+              <Text style={styles.avatarInitials}>{user.fullName ? user.fullName[0].toUpperCase() : 'U'}</Text>
             </View>
             <Pressable style={styles.editAvatarBtn} onPress={handleEditProfile}>
               <Ionicons name="pencil" size={12} color="#fff" />
             </Pressable>
           </View>
-          <ThemedText type="subtitle" style={styles.profileName}>Kavindu Perera</ThemedText>
-          <ThemedText style={styles.profileMeta}>PREMIUM MEMBER SINCE 2021</ThemedText>
+          <ThemedText type="subtitle" style={styles.profileName}>{user.fullName}</ThemedText>
+          <ThemedText style={styles.profileMeta}>{user.email}</ThemedText>
+          <Pressable onPress={logout} style={{ marginTop: 10 }}>
+             <Text style={{ color: '#dc2626', fontWeight: 'bold' }}>Logout</Text>
+          </Pressable>
         </View>
 
-        {/* ── Stats Row ──────────────────────────────────────────────────── */}
+        {/* ── Stats Row (Dynamic zero) ─────────────────────────────────────── */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <View style={[styles.statIconBox, { backgroundColor: '#fef2f2' }]}>
               <Ionicons name="time" size={20} color="#dc2626" />
             </View>
             <ThemedText style={styles.statLabel}>Service History</ThemedText>
-            <ThemedText type="defaultSemiBold" style={styles.statValue}>12 Records</ThemedText>
+            <ThemedText type="defaultSemiBold" style={styles.statValue}>0 Records</ThemedText>
             <Pressable>
               <Text style={styles.statLink}>View All →</Text>
             </Pressable>
@@ -132,8 +109,8 @@ export default function ProfileScreen() {
               <Ionicons name="star" size={20} color="#2563eb" />
             </View>
             <ThemedText style={styles.statLabel}>Loyalty Points</ThemedText>
-            <ThemedText type="defaultSemiBold" style={styles.statValue}>2,450 pts</ThemedText>
-            <Text style={[styles.statLink, { color: '#2563eb' }]}>Gold Tier</Text>
+            <ThemedText type="defaultSemiBold" style={styles.statValue}>0 pts</ThemedText>
+            <Text style={[styles.statLink, { color: '#2563eb' }]}>New Member</Text>
           </View>
         </View>
 
@@ -221,19 +198,19 @@ export default function ProfileScreen() {
               <Ionicons name="trophy" size={24} color="#fff" />
             </View>
             <View>
-              <Text style={styles.loyaltyTitle}>Gold Tier Member</Text>
+              <Text style={styles.loyaltyTitle}>Starter Tier Member</Text>
               <Text style={styles.loyaltySubtitle}>Exclusive benefits & rewards</Text>
             </View>
           </View>
           <View style={styles.progressContainer}>
             <View style={styles.progressHeader}>
               <Text style={styles.progressLabel}>Points Progress</Text>
-              <Text style={styles.progressValue}>2,450 / 5,000</Text>
+              <Text style={styles.progressValue}>0 / 1,000</Text>
             </View>
             <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: '49%' }]} />
+              <View style={[styles.progressFill, { width: '0%' }]} />
             </View>
-            <Text style={styles.progressNote}>550 points to Platinum tier</Text>
+            <Text style={styles.progressNote}>1000 points to Silver tier</Text>
           </View>
         </View>
 
