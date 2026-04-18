@@ -28,7 +28,7 @@ export default function Login() {
     }
     
     try {
-      const response = await fetch('http://192.168.1.100:5000/api/auth/login', { // UPDATE IP TO YOURS OR HOSTED API
+      const response = await fetch('http://192.168.1.100:5005/api/auth/login', { // UPDATE IP TO YOURS OR HOSTED API
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -39,7 +39,12 @@ export default function Login() {
       if (response.ok) {
         console.log("✅ API Login success!", data.user.email);
         login(data.token, data.user);
-        router.replace("/(tabs)/profile");
+        
+        if (data.user.isAdmin) {
+          router.replace("/(admin)");
+        } else {
+          router.replace("/(tabs)/profile");
+        }
       } else {
         console.log("❌ API Login error:", data.message);
         Alert.alert("Login Failed", data.message || "Invalid credentials");

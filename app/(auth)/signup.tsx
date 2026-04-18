@@ -39,7 +39,7 @@ export default function Signup() {
     }
     
     try {
-      const response = await fetch('http://192.168.1.100:5000/api/auth/register', { // UPDATE IP TO YOURS OR HOSTED API
+      const response = await fetch('http://192.168.1.100:5005/api/auth/register', { // UPDATE IP TO YOURS OR HOSTED API
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
