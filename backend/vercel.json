@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "api/server.js"
+    }
+  ],
+  "env": {
+    "MONGO_URI": "mongodb+srv://pusa:sam123@vehicle.nmh4rje.mongodb.net/motohub",
+    "JWT_SECRET": "motohub_secret_key_123"
+  }
+}
