@@ -4,7 +4,7 @@ import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function HomeScreen() {
@@ -46,6 +46,19 @@ export default function HomeScreen() {
               <ThemedText className="text-[10px] text-zinc-500 uppercase tracking-widest">Roadside Assist</ThemedText>
            </View>
         </View>
+
+        <TouchableOpacity 
+          className="bg-zinc-900 p-6 rounded-xl flex-row items-center justify-between mb-8"
+          onPress={() => router.push('/service-module')}
+        >
+          <View className="flex-1">
+            <ThemedText className="text-white text-lg font-bold mb-1">Service History & Records</ThemedText>
+            <ThemedText className="text-zinc-400 text-xs">View past services and analytics</ThemedText>
+          </View>
+          <View className="bg-red-600 w-10 h-10 rounded-full items-center justify-center">
+            <Ionicons name="arrow-forward" size={20} color="white" />
+          </View>
+        </TouchableOpacity>
 
         <View className="mb-6">
            <ThemedText className="text-red-600 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">Our Expertise</ThemedText>
