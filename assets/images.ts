@@ -26,19 +26,19 @@ export type HeroSlide = {
 
 export const heroSlides: HeroSlide[] = [
   {
-    image: require('./images/hero-garage.jpg'),
+    image: require('./images/e11.jpg'),
     title: '#1',
     subtitle: 'CAR SERVICE',
     description: 'CHAIN IN SRI LANKA',
   },
   {
-    image: require('./images/hero-roadside.jpg'),
+    image: require('./images/c3.jpg'),
     title: 'MOTOHUB',
     subtitle: 'EXPERT CARE',
     description: 'NO. 01 CAR SERVICE STORIES',
   },
   {
-    image: require('./images/hero-showroom.jpg'),
+    image: require('./images/c2.jpg'),
     title: 'EXPERT',
     subtitle: 'AUTO CARE',
     description: 'PROFESSIONAL SERVICE GUARANTEED',
