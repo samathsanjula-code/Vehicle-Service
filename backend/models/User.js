@@ -14,10 +14,12 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
+      match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email'],
     },
     phone: {
       type: String,
       required: [true, 'Phone number is required'],
+      match: [/^0\d{9}$/, 'Phone must be 10 digits starting with 0'],
     },
     passwordHash: {
       type: String,
@@ -31,11 +33,13 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Hash password before saving
 userSchema.pre('save', async function () {
   if (!this.isModified('passwordHash')) return;
   this.passwordHash = await bcrypt.hash(this.passwordHash, 12);
 });
 
+// Compare plain password with hash
 userSchema.methods.comparePassword = async function (plainPassword) {
   return bcrypt.compare(plainPassword, this.passwordHash);
 };

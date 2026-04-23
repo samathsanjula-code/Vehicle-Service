@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
+import { API } from '../constants/api';
 
-// Make sure to set this to your hosted backend URL later
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000/api/auth';
+// Base URL comes from constants/api.ts — change it there
+const API_URL = API.auth;
 
 type User = {
   id: string;
