@@ -1,63 +1,62 @@
-import { ScrollView, View, Text, Pressable, Linking, StyleSheet, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, View, Text, Pressable, Linking, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useBookings, Booking } from '@/hooks/useBookings';
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
-type Appointment = {
-  id: number;
-  service: string;
-  date: string;
-  time: string;
-  status: 'Confirmed' | 'Pending' | 'Completed';
-};
-
-const upcomingAppointments: Appointment[] = [
-  {
-    id: 1,
-    service: 'Oil Change & Filter',
-    date: 'April 8, 2026',
-    time: '10:00 AM',
-    status: 'Confirmed',
-  },
-  {
-    id: 2,
-    service: 'Brake Inspection',
-    date: 'April 15, 2026',
-    time: '2:30 PM',
-    status: 'Pending',
-  },
-];
-
-const STATUS_STYLE: Record<Appointment['status'], { bg: string; text: string }> = {
+const STATUS_STYLE: Record<string, { bg: string; text: string }> = {
   Confirmed: { bg: '#dcfce7', text: '#166534' },
   Pending: { bg: '#fef9c3', text: '#854d0e' },
   Completed: { bg: '#f3f4f6', text: '#374151' },
+  Cancelled: { bg: '#fce8e6', text: '#d93025' },
 };
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function AppointmentsScreen() {
+  const { fetchUserBookings, loading, error } = useBookings();
+  const [upcomingAppointments, setUpcomingAppointments] = useState<Booking[]>([]);
+
+  useEffect(() => {
+    loadBookings();
+  }, []);
+
+  const loadBookings = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        const decoded = JSON.parse(jsonPayload);
+        
+        const data = await fetchUserBookings(decoded.id);
+        setUpcomingAppointments(data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleNewAppointment = () => {
-    Alert.alert(
-      'Book Appointment',
-      'Choose how you would like to book your service.',
-      [
-        { text: 'Call Us', onPress: () => Linking.openURL('tel:0755004004') },
-        { text: 'Cancel', style: 'cancel' },
-      ],
-    );
+    router.push('/booking/create');
   };
 
-  const handleViewDetails = (item: Appointment) => {
-    Alert.alert(item.service, `Date: ${item.date}\nTime: ${item.time}\nStatus: ${item.status}`);
+  const handleViewDetails = (item: Booking) => {
+    router.push(`/booking/${item._id}`);
   };
 
-  const handleReschedule = () => {
-    Linking.openURL('tel:0755004004');
+  const handleReschedule = (item: Booking) => {
+    router.push(`/booking/reschedule/${item._id}`);
   };
 
   return (
@@ -87,50 +86,61 @@ export default function AppointmentsScreen() {
         <ThemedView style={styles.section}>
           <ThemedText type="subtitle" style={styles.sectionTitle}>Upcoming</ThemedText>
 
-          {upcomingAppointments.map((appt) => {
-            const statusStyle = STATUS_STYLE[appt.status];
-            return (
-              <View key={appt.id} style={styles.apptCard}>
-                {/* Card Top */}
-                <View style={styles.apptCardTop}>
-                  <ThemedText type="defaultSemiBold" style={styles.apptName}>
-                    {appt.service}
-                  </ThemedText>
-                  <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
-                    <Text style={[styles.statusText, { color: statusStyle.text }]}>
-                      {appt.status}
-                    </Text>
+          {loading ? (
+            <ActivityIndicator size="large" color="#dc2626" />
+          ) : error ? (
+            <Text style={{ color: '#dc2626', textAlign: 'center' }}>{error}</Text>
+          ) : upcomingAppointments.length === 0 ? (
+            <Text style={{ textAlign: 'center', color: '#6b7280', marginTop: 10 }}>No appointments found.</Text>
+          ) : (
+            upcomingAppointments.map((appt) => {
+              const statusStyle = STATUS_STYLE[appt.status] || { bg: '#f3f4f6', text: '#374151' };
+              return (
+                <View key={appt._id} style={styles.apptCard}>
+                  {/* Card Top */}
+                  <View style={styles.apptCardTop}>
+                    <ThemedText type="defaultSemiBold" style={styles.apptName}>
+                      {Array.isArray(appt.serviceType) ? appt.serviceType.join(', ') : appt.serviceType}
+                    </ThemedText>
+                    <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
+                      <Text style={[styles.statusText, { color: statusStyle.text }]}>
+                        {appt.status}
+                      </Text>
+                    </View>
                   </View>
-                </View>
 
-                {/* Date & Time */}
-                <View style={styles.apptMeta}>
-                  <View style={styles.metaRow}>
-                    <Ionicons name="calendar-outline" size={14} color="#6b7280" />
-                    <ThemedText style={styles.metaText}>{appt.date}</ThemedText>
+                  {/* Date & Time */}
+                  <View style={styles.apptMeta}>
+                    <View style={styles.metaRow}>
+                      <Ionicons name="calendar-outline" size={14} color="#6b7280" />
+                      <ThemedText style={styles.metaText}>{new Date(appt.scheduledDate).toLocaleDateString()}</ThemedText>
+                    </View>
+                    <View style={styles.metaRow}>
+                      <Ionicons name="time-outline" size={14} color="#6b7280" />
+                      <ThemedText style={styles.metaText}>{appt.scheduledTime}</ThemedText>
+                    </View>
                   </View>
-                  <View style={styles.metaRow}>
-                    <Ionicons name="time-outline" size={14} color="#6b7280" />
-                    <ThemedText style={styles.metaText}>{appt.time}</ThemedText>
-                  </View>
-                </View>
 
-                {/* Actions */}
-                <View style={styles.apptActions}>
-                  <Pressable
-                    style={({ pressed }) => [styles.actionBtnPrimary, pressed && { opacity: 0.85 }]}
-                    onPress={() => handleViewDetails(appt)}>
-                    <Text style={styles.actionBtnPrimaryText}>View Details</Text>
-                  </Pressable>
-                  <Pressable
-                    style={({ pressed }) => [styles.actionBtnSecondary, pressed && { opacity: 0.85 }]}
-                    onPress={handleReschedule}>
-                    <Text style={styles.actionBtnSecondaryText}>Reschedule</Text>
-                  </Pressable>
+                  {/* Actions */}
+                  <View style={styles.apptActions}>
+                    <Pressable
+                      style={({ pressed }) => [styles.actionBtnPrimary, pressed && { opacity: 0.85 }]}
+                      onPress={() => handleViewDetails(appt)}>
+                      <Text style={styles.actionBtnPrimaryText}>View Details</Text>
+                    </Pressable>
+                    
+                    {appt.status !== 'Cancelled' && appt.status !== 'Completed' && (
+                      <Pressable
+                        style={({ pressed }) => [styles.actionBtnSecondary, pressed && { opacity: 0.85 }]}
+                        onPress={() => handleReschedule(appt)}>
+                        <Text style={styles.actionBtnSecondaryText}>Reschedule</Text>
+                      </Pressable>
+                    )}
+                  </View>
                 </View>
-              </View>
-            );
-          })}
+              );
+            })
+          )}
         </ThemedView>
 
         {/* Need Help Block */}
