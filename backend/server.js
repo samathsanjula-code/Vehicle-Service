@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 
 const authRoutes = require('./routes/auth');
+const vehicleServiceRoutes = require('./routes/vehicleService');
 const User = require('./models/User');
 
 const app = express();
@@ -16,6 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
+app.use('/api/vehicle-service', vehicleServiceRoutes);
 
 // Health check
 app.get('/', (req, res) => {
@@ -33,10 +35,17 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Internal server error' });
 });
 
-// ─── Database Connection ──────────────────────────────────────────────────────
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(async () => {
+// ─── Database Connection with Retry ──────────────────────────────────────────
+const MAX_RETRIES = 10;
+const RETRY_DELAY_MS = 3000;
+
+async function connectWithRetry(attempt = 1) {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000,
+    });
+
     console.log('✅ MongoDB connected successfully to Atlas');
     console.log(`📡 Database: ${mongoose.connection.name}`);
 
@@ -65,8 +74,18 @@ mongoose
       console.log(`🚀 MotoHub API server running on port ${PORT}`);
       console.log(`🌐 Access from device: http://<YOUR_LAN_IP>:${PORT}`);
     });
-  })
-  .catch((err) => {
-    console.error('❌ MongoDB connection failed:', err.message);
-    process.exit(1);
-  });
+
+  } catch (err) {
+    console.error(`❌ MongoDB connection failed (attempt ${attempt}/${MAX_RETRIES}): ${err.message}`);
+
+    if (attempt < MAX_RETRIES) {
+      console.log(`🔄 Retrying in ${RETRY_DELAY_MS / 1000}s...`);
+      setTimeout(() => connectWithRetry(attempt + 1), RETRY_DELAY_MS);
+    } else {
+      console.error('💀 Max retries reached. Exiting.');
+      process.exit(1);
+    }
+  }
+}
+
+connectWithRetry();

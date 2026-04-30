@@ -1,18 +1,17 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import {
-  ScrollView,
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
   Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { vehicleImages } from '@/assets/images';
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -20,7 +19,7 @@ type Vehicle = {
   id: number;
   name: string;
   plate: string;
-  image: ReturnType<typeof require>;
+  image: string | number;
   status: string;
   statusColor: string;
   statusDot: string;
@@ -41,15 +40,15 @@ const serviceHistory: ServiceRecord[] = [];
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-import { Redirect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const router = useRouter();
-  
+
   const handleAddCar = () => {
-    Alert.alert('Add Vehicle', 'This feature is coming soon!');
+    router.push('/add-vehicle');
   };
 
   const handleEditProfile = () => {
@@ -88,7 +87,7 @@ export default function ProfileScreen() {
           <ThemedText type="subtitle" style={styles.profileName}>{user.fullName}</ThemedText>
           <ThemedText style={styles.profileMeta}>{user.email}</ThemedText>
           <Pressable onPress={logout} style={{ marginTop: 10 }}>
-             <Text style={{ color: '#dc2626', fontWeight: 'bold' }}>Logout</Text>
+            <Text style={{ color: '#dc2626', fontWeight: 'bold' }}>Logout</Text>
           </Pressable>
         </View>
 
@@ -122,7 +121,7 @@ export default function ProfileScreen() {
               style={({ pressed }) => [styles.addCarBtn, pressed && { opacity: 0.85 }]}
               onPress={handleAddCar}>
               <Ionicons name="add" size={16} color="#fff" />
-              <Text style={styles.addCarBtnText}>Add Car</Text>
+              <Text style={styles.addCarBtnText}>Add Vehicles</Text>
             </Pressable>
           </View>
           <ThemedText style={styles.sectionSubtitle}>Registered for precision service</ThemedText>

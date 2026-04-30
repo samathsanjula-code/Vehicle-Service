@@ -5,10 +5,11 @@
 //     Example: 'http://192.168.1.105:5000'
 // ─────────────────────────────────────────────────────────────
 
-export const BASE_URL = 'http://192.168.1.101:5000';
+export const BASE_URL = 'http://10.204.2.32:5000';
 
 export const API = {
-  login:    `${BASE_URL}/api/auth/login`,
+  login: `${BASE_URL}/api/auth/login`,
   register: `${BASE_URL}/api/auth/register`,
-  auth:     `${BASE_URL}/api/auth`,
+  auth: `${BASE_URL}/api/auth`,
+  vehicleService: `${BASE_URL}/api/vehicle-service`,
 } as const;
