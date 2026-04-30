@@ -35,6 +35,7 @@ export default function BookingFormScreen() {
 
   const [scheduledTime, setScheduledTime] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
+  const [otherServiceText, setOtherServiceText] = useState('');
 
   const toggleService = (s: string) => {
     if (serviceTypes.includes(s)) {
@@ -67,10 +68,11 @@ export default function BookingFormScreen() {
   const handleSubmit = async () => {
     if (!vehicleId || serviceTypes.length === 0 || !scheduledDate || !scheduledTime) return;
     try {
+      const finalServices = serviceTypes.map(s => (s === 'Other' && otherServiceText.trim() ? otherServiceText.trim() : s));
       const dateString = scheduledDate.toISOString().split('T')[0];
       const newBooking = await createBooking({
         vehicleId,
-        serviceType: serviceTypes,
+        serviceType: finalServices,
         scheduledDate: dateString,
         scheduledTime,
         notes
@@ -80,7 +82,7 @@ export default function BookingFormScreen() {
         pathname: '/payment',
         params: {
           bookingId: newBooking._id,
-          serviceType: serviceTypes.join(', '),
+          serviceType: finalServices.join(', '),
           scheduledDate: dateString,
           scheduledTime: newBooking.scheduledTime
         }
@@ -146,16 +148,37 @@ export default function BookingFormScreen() {
               ))}
             </View>
 
+            {serviceTypes.includes('Other') && (
+              <View style={{ marginTop: 12 }}>
+                <TextInput
+                  style={[styles.textArea, { minHeight: 50 }]}
+                  placeholder="Enter the service you want..."
+                  value={otherServiceText}
+                  onChangeText={setOtherServiceText}
+                />
+              </View>
+            )}
+
             {/* Date & Time */}
             <Text style={[styles.label, { marginTop: 24 }]}>DATE & TIME</Text>
-            <Text style={styles.subLabel}>Preferred Date</Text>
-            <TouchableOpacity 
-              style={styles.dateButton} 
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text style={styles.dateText}>{scheduledDate.toDateString()}</Text>
-              <Ionicons name="calendar-outline" size={20} color="#c0392b" />
-            </TouchableOpacity>
+            
+            <View style={styles.dateInputContainer}>
+              <View style={styles.dateInputLabelContainer}>
+                <Text style={styles.dateInputLabelText}>Date</Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.dateInputBox} 
+                onPress={() => setShowDatePicker(true)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.dateInputText}>
+                  {scheduledDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+                </Text>
+                <View style={styles.dateIconWrapper}>
+                  <Ionicons name="calendar-outline" size={20} color="#333" />
+                </View>
+              </TouchableOpacity>
+            </View>
 
             {showDatePicker && (
               <DateTimePicker
@@ -198,7 +221,7 @@ export default function BookingFormScreen() {
               </Text>
 
               <Text style={styles.summaryLabel}>Services</Text>
-              <Text style={styles.summaryValue}>{serviceTypes.join(', ')}</Text>
+              <Text style={styles.summaryValue}>{serviceTypes.map(s => s === 'Other' && otherServiceText ? otherServiceText : s).join(', ')}</Text>
               
               <Text style={styles.summaryLabel}>Date</Text>
               <Text style={styles.summaryValue}>{scheduledDate.toDateString()}</Text>
@@ -257,8 +280,12 @@ const styles = StyleSheet.create({
   dropdownItemText: { fontSize: 16, color: '#333' },
   dropdownItemTextSelected: { color: '#c0392b', fontWeight: 'bold' },
 
-  dateButton: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, backgroundColor: '#f9f9f9', borderRadius: 8, borderWidth: 1, borderColor: '#e0e0e0' },
-  dateText: { fontSize: 16, color: '#333' },
+  dateInputContainer: { marginTop: 16, position: 'relative' },
+  dateInputLabelContainer: { position: 'absolute', top: -8, left: 12, backgroundColor: '#fff', zIndex: 1, paddingHorizontal: 4 },
+  dateInputLabelText: { fontSize: 12, color: '#5e4b8b', fontWeight: 'bold' },
+  dateInputBox: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 2, borderColor: '#5e4b8b', borderRadius: 4, paddingVertical: 12, paddingHorizontal: 16, backgroundColor: '#fff' },
+  dateInputText: { fontSize: 16, color: '#333' },
+  dateIconWrapper: { backgroundColor: '#e0e0e0', padding: 6, borderRadius: 20 },
   
   summaryCard: { backgroundColor: '#f9f9f9', padding: 20, borderRadius: 12, borderWidth: 1, borderColor: '#e0e0e0' },
   summaryLabel: { fontSize: 14, color: '#7f8c8d', marginBottom: 4, marginTop: 12 },
