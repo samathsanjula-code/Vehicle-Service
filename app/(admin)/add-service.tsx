@@ -77,6 +77,7 @@ export default function AddServiceScreen() {
   const [serviceName, setServiceName] = useState('');
   const [category, setCategory] = useState('');
   const [price, setPrice] = useState('');
+  const [discountPrice, setDiscountPrice] = useState('');
   const [description, setDescription] = useState('');
   const [features, setFeatures] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -100,6 +101,7 @@ export default function AddServiceScreen() {
           name: serviceName,
           category: category,
           price: parseFloat(price) || 0,
+          discountPrice: discountPrice ? parseFloat(discountPrice) : undefined,
           description: description,
           features: newFeaturesArray,
           icon: 'sparkles-outline',
@@ -185,6 +187,16 @@ export default function AddServiceScreen() {
               keyboardType="numeric"
               value={price}
               onChangeText={setPrice}
+            />
+
+            <ModernInput
+              label="Discount Price (LKR) - Optional"
+              icon="pricetag-outline"
+              required={false}
+              placeholder="e.g. 2800"
+              keyboardType="numeric"
+              value={discountPrice}
+              onChangeText={setDiscountPrice}
             />
           </View>
 

@@ -79,6 +79,7 @@ export default function EditServiceScreen() {
   const [serviceName, setServiceName] = useState('');
   const [category, setCategory] = useState('');
   const [price, setPrice] = useState('');
+  const [discountPrice, setDiscountPrice] = useState('');
   const [description, setDescription] = useState('');
   const [features, setFeatures] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -94,6 +95,7 @@ export default function EditServiceScreen() {
           setServiceName(targetService.name);
           setCategory(targetService.category);
           setPrice(targetService.price.toString());
+          setDiscountPrice(targetService.discountPrice ? targetService.discountPrice.toString() : '');
           setDescription(targetService.description);
           setFeatures(targetService.features ? targetService.features.join(', ') : '');
         }
@@ -125,6 +127,7 @@ export default function EditServiceScreen() {
           name: serviceName,
           category: category,
           price: parseFloat(price) || 0,
+          discountPrice: discountPrice ? parseFloat(discountPrice) : undefined,
           description: description,
           features: newFeaturesArray,
         }),
@@ -207,6 +210,16 @@ export default function EditServiceScreen() {
                 keyboardType="numeric"
                 value={price}
                 onChangeText={setPrice}
+              />
+
+              <ModernInput
+                label="Discount Price (LKR) - Optional"
+                icon="pricetag-outline"
+                required={false}
+                placeholder="e.g. 2800"
+                keyboardType="numeric"
+                value={discountPrice}
+                onChangeText={setDiscountPrice}
               />
             </View>
 

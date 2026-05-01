@@ -93,7 +93,16 @@ export default function ManageServicesScreen() {
                   <Text style={styles.serviceName}>{service.name}</Text>
                   <Text style={styles.serviceCategory}>{service.category}</Text>
                 </View>
-                <Text style={styles.servicePrice}>LKR {service.price}</Text>
+                <View style={{ alignItems: 'flex-end' }}>
+                  {service.discountPrice ? (
+                    <>
+                      <Text style={styles.originalPriceText}>LKR {service.price}</Text>
+                      <Text style={styles.servicePrice}>LKR {service.discountPrice}</Text>
+                    </>
+                  ) : (
+                    <Text style={styles.servicePrice}>LKR {service.price}</Text>
+                  )}
+                </View>
               </View>
 
               <View style={styles.cardActions}>
@@ -225,6 +234,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     color: '#111827',
+  },
+  originalPriceText: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    textDecorationLine: 'line-through',
+    marginBottom: 2,
   },
   cardActions: {
     flexDirection: 'row',

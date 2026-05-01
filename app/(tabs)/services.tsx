@@ -89,8 +89,15 @@ export default function ServicesScreen() {
                 <View style={styles.iconWrapper}>
                   <Ionicons name={service.icon} size={28} color="#4F46E5" />
                 </View>
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{service.category}</Text>
+                <View style={styles.badgeContainer}>
+                  {service.discountPrice && (
+                    <View style={styles.discountBadge}>
+                      <Text style={styles.discountBadgeText}>OFFER</Text>
+                    </View>
+                  )}
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{service.category}</Text>
+                  </View>
                 </View>
               </View>
 
@@ -109,7 +116,16 @@ export default function ServicesScreen() {
               </View>
 
               <View style={styles.cardFooter}>
-                <Text style={styles.priceText}>Starting at LKR {service.price}</Text>
+                <View>
+                  {service.discountPrice ? (
+                    <>
+                      <Text style={styles.originalPriceText}>LKR {service.price}</Text>
+                      <Text style={styles.priceText}>LKR {service.discountPrice}</Text>
+                    </>
+                  ) : (
+                    <Text style={styles.priceText}>LKR {service.price}</Text>
+                  )}
+                </View>
                 <Pressable
                   style={({ pressed }) => [
                     styles.primaryButton,
@@ -244,6 +260,23 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
   },
+  badgeContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  discountBadge: {
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+  },
+  discountBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#EF4444',
+  },
   badgeText: {
     fontSize: 12,
     fontWeight: '600',
@@ -287,9 +320,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 'auto',
   },
+  originalPriceText: {
+    fontSize: 13,
+    color: '#9CA3AF',
+    textDecorationLine: 'line-through',
+    marginBottom: 2,
+  },
   priceText: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '800',
     color: '#111827',
   },
   primaryButton: {

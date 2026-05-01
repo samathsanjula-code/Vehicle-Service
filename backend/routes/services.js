@@ -35,12 +35,13 @@ router.get('/:id', async (req, res) => {
 // @access  Public (should ideally be Admin only)
 router.post('/', async (req, res) => {
   try {
-    const { name, category, price, description, features, icon } = req.body;
+    const { name, category, price, discountPrice, description, features, icon } = req.body;
 
     const newService = new Service({
       name,
       category,
       price,
+      discountPrice,
       description,
       features,
       icon: icon || 'sparkles-outline'
@@ -59,7 +60,7 @@ router.post('/', async (req, res) => {
 // @access  Public
 router.put('/:id', async (req, res) => {
   try {
-    const { name, category, price, description, features, icon } = req.body;
+    const { name, category, price, discountPrice, description, features, icon } = req.body;
     
     let service = await Service.findById(req.params.id);
     if (!service) return res.status(404).json({ msg: 'Service not found' });
@@ -67,6 +68,7 @@ router.put('/:id', async (req, res) => {
     service.name = name || service.name;
     service.category = category || service.category;
     service.price = price || service.price;
+    service.discountPrice = discountPrice !== undefined ? discountPrice : service.discountPrice;
     service.description = description || service.description;
     if (features) service.features = features;
     service.icon = icon || service.icon;
