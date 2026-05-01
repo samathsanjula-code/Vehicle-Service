@@ -13,6 +13,17 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
+// GET a single vehicle by ID
+router.get('/:id', authMiddleware, async (req, res) => {
+  try {
+    const vehicle = await Vehicle.findOne({ _id: req.params.id, owner: req.user.id });
+    if (!vehicle) return res.status(404).json({ message: 'Vehicle not found' });
+    res.json(vehicle);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error while fetching vehicle' });
+  }
+});
+
 // POST add a new vehicle
 router.post('/', authMiddleware, async (req, res) => {
   try {

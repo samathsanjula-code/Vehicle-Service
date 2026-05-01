@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { heroSlides, serviceImages, galleryImages, HeroSlide } from '@/assets/img_assets';
+import { heroSlides, serviceImages, galleryImages, HeroSlide } from '@/assets/images';
 import { HelloWave } from '@/components/hello-wave';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';

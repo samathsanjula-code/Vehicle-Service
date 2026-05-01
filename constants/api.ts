@@ -5,7 +5,7 @@
 //     Example: 'http://192.168.1.105:5000'
 // ─────────────────────────────────────────────────────────────
 
-export const BASE_URL = 'http://10.204.2.32:5000';
+export const BASE_URL = 'http://172.16.102.32:5000';
 
 export const API = {
   login: `${BASE_URL}/api/auth/login`,

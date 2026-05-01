@@ -95,13 +95,13 @@ export default function AddVehicleScreen() {
       const fetchRecord = async () => {
         setLoading(true);
         try {
-          const response = await fetch(API.vehicleService, {
+          // Use API.vehicles endpoint which matches where service-history fetches from
+          const response = await fetch(`${API.vehicles}/${editId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
-          const data = await response.json();
-          const record = data.find((r: any) => r._id === editId);
+          const record = await response.json();
           
-          if (record) {
+          if (response.ok && record) {
             setFullName(record.customerDetails?.fullName || '');
             setContactNumber(record.customerDetails?.contactNumber || '');
             setCategory(record.vehicleDetails?.category || null);
@@ -118,9 +118,13 @@ export default function AddVehicleScreen() {
             setTimeSlot(record.serviceDetails?.preferredTimeSlot || null);
             setIssueDescription(record.serviceDetails?.issueDescription || '');
             setImages(record.image ? [record.image] : []);
+          } else {
+            console.error('Failed to fetch vehicle:', record.message);
+            Alert.alert('Error', 'Could not load vehicle details.');
           }
         } catch (error) {
           console.error('Error fetching record for edit:', error);
+          Alert.alert('Error', 'An error occurred while loading vehicle details.');
         } finally {
           setLoading(false);
         }
