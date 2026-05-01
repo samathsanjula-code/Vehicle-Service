@@ -4,22 +4,36 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
-import { BOOKINGS_URL } from '../../constants/api';
+import { BOOKINGS_URL, API } from '../../constants/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function AssignMechanics() {
   const router = useRouter();
   const { token } = useAuth();
   const [bookings, setBookings] = useState<any[]>([]);
+  const [mechanics, setMechanics] = useState<any[]>([]);
+  const [selectedMechanics, setSelectedMechanics] = useState<Record<string, string>>({});
+  const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchPendingBookings();
+    fetchData();
   }, []);
 
-  const fetchPendingBookings = async () => {
+  const fetchData = async () => {
     try {
       const tokenStr = token || await AsyncStorage.getItem('token');
+      
+      // Fetch mechanics
+      const mechRes = await fetch(API.mechanics, {
+        headers: { Authorization: `Bearer ${tokenStr}` }
+      });
+      if (mechRes.ok) {
+        const mechData = await mechRes.json();
+        setMechanics(mechData.filter((m: any) => m.availability === 'Available'));
+      }
+
+      // Fetch bookings
       const res = await fetch(BOOKINGS_URL, {
         headers: { Authorization: `Bearer ${tokenStr}` }
       });
@@ -39,8 +53,37 @@ export default function AssignMechanics() {
     }
   };
 
-  const handleAssignClick = (bookingId: string) => {
-    Alert.alert('Assign Feature', 'This will open a modal fetching available mechanics to assign to Booking: ' + bookingId);
+  const handleAssignClick = async (bookingId: string) => {
+    const mechanicId = selectedMechanics[bookingId];
+    if (!mechanicId) {
+      Alert.alert('Error', 'Please select a mechanic first.');
+      return;
+    }
+
+    try {
+      const tokenStr = token || await AsyncStorage.getItem('token');
+      const res = await fetch(`${BOOKINGS_URL}/${bookingId}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${tokenStr}` 
+        },
+        body: JSON.stringify({ 
+          status: 'Assigned',
+          assignedMechanic: mechanicId 
+        })
+      });
+
+      if (res.ok) {
+        Alert.alert('Success', 'Mechanic assigned successfully!');
+        setBookings(prev => prev.filter(b => b._id !== bookingId));
+      } else {
+        Alert.alert('Error', 'Failed to assign mechanic.');
+      }
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Error', 'Network request failed');
+    }
   };
 
   if (loading) {
@@ -84,6 +127,41 @@ export default function AssignMechanics() {
               </View>
 
               <View style={styles.divider} />
+
+              <View style={{ marginBottom: 12 }}>
+                <Text style={{ fontSize: 13, color: '#4b5563', marginBottom: 4 }}>Select Mechanic:</Text>
+                <TouchableOpacity 
+                  style={{ borderWidth: 1, borderColor: '#d1d5db', padding: 8, borderRadius: 8, backgroundColor: '#f9fafb' }}
+                  onPress={() => setDropdownOpen(dropdownOpen === booking._id ? null : booking._id)}
+                >
+                  <Text style={{ color: selectedMechanics[booking._id] ? '#111827' : '#9ca3af' }}>
+                    {selectedMechanics[booking._id] 
+                      ? mechanics.find(m => m._id === selectedMechanics[booking._id])?.name 
+                      : 'Tap to select...'}
+                  </Text>
+                </TouchableOpacity>
+
+                {dropdownOpen === booking._id && (
+                  <View style={{ marginTop: 4, borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, backgroundColor: '#fff' }}>
+                    {mechanics.length === 0 ? (
+                      <Text style={{ padding: 8, color: '#6b7280' }}>No available mechanics</Text>
+                    ) : (
+                      mechanics.map(m => (
+                        <TouchableOpacity 
+                          key={m._id} 
+                          style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}
+                          onPress={() => {
+                            setSelectedMechanics(prev => ({ ...prev, [booking._id]: m._id }));
+                            setDropdownOpen(null);
+                          }}
+                        >
+                          <Text style={{ color: '#111827' }}>{m.name} ({m.specialization})</Text>
+                        </TouchableOpacity>
+                      ))
+                    )}
+                  </View>
+                )}
+              </View>
 
               <View style={styles.actionRow}>
                 <Text style={styles.statusText}>Status: <Text style={{color: '#d97706'}}>{booking.status}</Text></Text>
