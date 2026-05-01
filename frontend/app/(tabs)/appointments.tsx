@@ -3,11 +3,11 @@ import { ScrollView, View, Text, Pressable, Linking, StyleSheet, Alert, Activity
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useBookings, Booking } from '@/hooks/useBookings';
+import { useAuth } from '../../context/AuthContext';
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -22,29 +22,23 @@ const STATUS_STYLE: Record<string, { bg: string; text: string }> = {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function AppointmentsScreen() {
+  const { user } = useAuth();
   const { fetchUserBookings, deleteBooking, loading, error } = useBookings();
   const [upcomingAppointments, setUpcomingAppointments] = useState<Booking[]>([]);
 
   useFocusEffect(
     useCallback(() => {
-      loadBookings();
-    }, [])
+      if (user) {
+        loadBookings();
+      }
+    }, [user])
   );
 
   const loadBookings = async () => {
     try {
-      const token = await AsyncStorage.getItem('token');
-      if (token) {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-        const decoded = JSON.parse(jsonPayload);
-        
-        const data = await fetchUserBookings(decoded.id);
-        setUpcomingAppointments(data);
-      }
+      if (!user) return;
+      const data = await fetchUserBookings(user.id);
+      setUpcomingAppointments(data);
     } catch (err) {
       console.error(err);
     }
@@ -53,6 +47,25 @@ export default function AppointmentsScreen() {
   const handleNewAppointment = () => {
     router.push('/booking/create');
   };
+
+  // If not logged in, show login prompt
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 }}>
+          <Ionicons name="lock-closed-outline" size={64} color="#d1d5db" />
+          <Text style={{ fontSize: 20, fontWeight: '700', color: '#111827', marginTop: 16, marginBottom: 8 }}>Login Required</Text>
+          <Text style={{ fontSize: 15, color: '#6b7280', textAlign: 'center', marginBottom: 24 }}>Please log in to view and manage your appointments.</Text>
+          <Pressable
+            style={({ pressed }) => [styles.newApptBtn, pressed && { opacity: 0.85 }, { alignSelf: 'stretch' }]}
+            onPress={() => router.push('/(auth)/login')}>
+            <Ionicons name="log-in-outline" size={20} color="#fff" />
+            <Text style={styles.newApptBtnText}>Go to Login</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const handleDelete = (id: string) => {
     Alert.alert(
@@ -154,7 +167,7 @@ export default function AppointmentsScreen() {
                       <Text style={styles.actionBtnPrimaryText}>View Details</Text>
                     </Pressable>
                     
-                    {appt.status === 'Pending' ? (
+                    {appt.status === 'Pending' && (
                       <>
                         <Pressable
                           style={({ pressed }) => [styles.actionBtnSecondary, pressed && { opacity: 0.85 }]}
@@ -167,13 +180,14 @@ export default function AppointmentsScreen() {
                           <Text style={styles.actionBtnDangerText}>Delete</Text>
                         </Pressable>
                       </>
-                    ) : appt.status !== 'Cancelled' && appt.status !== 'Completed' ? (
+                    )}
+                    {appt.status === 'Pending Payment' && (
                       <Pressable
                         style={({ pressed }) => [styles.actionBtnSecondary, pressed && { opacity: 0.85 }]}
                         onPress={() => handleReschedule(appt)}>
                         <Text style={styles.actionBtnSecondaryText}>Reschedule</Text>
                       </Pressable>
-                    ) : null}
+                    )}
                   </View>
                 </View>
               );

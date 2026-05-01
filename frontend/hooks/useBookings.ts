@@ -21,6 +21,9 @@ export const useBookings = () => {
 
   const getAuthHeader = async () => {
     const token = await AsyncStorage.getItem('token');
+    if (!token) {
+      throw new Error('No auth token found. Please log in again.');
+    }
     return {
       headers: {
         Authorization: `Bearer ${token}`
@@ -36,7 +39,7 @@ export const useBookings = () => {
       const response = await axios.get(`${BOOKINGS_URL}/user/${userId}`, config);
       return response.data as Booking[];
     } catch (err: any) {
-      const msg = err.response?.data?.message || 'Failed to fetch bookings';
+      const msg = err.response?.data?.message || err.message || 'Failed to fetch bookings';
       setError(msg);
       throw new Error(msg);
     } finally {

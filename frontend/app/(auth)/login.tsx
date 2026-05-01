@@ -38,8 +38,7 @@ export default function Login() {
       const data = await response.json();
       
       if (response.ok) {
-        console.log("✅ API Login success!", data.user.email);
-        login(data.token, data.user);
+        await login(data.token, data.user);
         
         if (data.user.isAdmin) {
           router.replace("/(admin)");
@@ -47,11 +46,9 @@ export default function Login() {
           router.replace("/(tabs)/profile");
         }
       } else {
-        console.log("❌ API Login error:", data.message);
         Alert.alert("Login Failed", data.message || "Invalid credentials");
       }
     } catch (error) {
-      console.log("❌ Network Error:", error);
       Alert.alert("Network Error", "Could not connect to the server.");
     }
   };

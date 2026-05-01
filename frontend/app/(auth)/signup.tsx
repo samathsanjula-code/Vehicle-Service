@@ -59,11 +59,9 @@ export default function Signup() {
           { text: "OK", onPress: () => router.push("/(auth)/login") }
         ]);
       } else {
-        console.log("❌ API Register error:", data.message);
         Alert.alert("Registration Failed", data.message || "An error occurred");
       }
     } catch (error) {
-      console.log("❌ Network Error:", error);
       Alert.alert("Network Error", "Could not connect to the server.");
     }
   };

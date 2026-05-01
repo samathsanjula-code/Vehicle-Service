@@ -25,8 +25,7 @@ exports.createBooking = async (req, res) => {
 exports.getAllBookings = async (req, res) => {
   try {
     const bookings = await Booking.find()
-      .populate('customerId', 'fullName email phone')
-      .populate('vehicleId');
+      .populate('customerId', 'fullName email phone');
     res.status(200).json(bookings);
   } catch (error) {
     console.error('Error fetching bookings:', error);
@@ -38,8 +37,7 @@ exports.getAllBookings = async (req, res) => {
 exports.getBookingById = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
-      .populate('customerId', 'fullName email phone')
-      .populate('vehicleId');
+      .populate('customerId', 'fullName email phone');
       
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
@@ -66,7 +64,6 @@ exports.getBookingsByUser = async (req, res) => {
     }
     
     const bookings = await Booking.find({ customerId: req.params.userId })
-      .populate('vehicleId')
       .sort({ scheduledDate: 1, scheduledTime: 1 });
       
     res.status(200).json(bookings);
