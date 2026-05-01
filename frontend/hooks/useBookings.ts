@@ -12,6 +12,7 @@ export interface Booking {
   scheduledTime: string;
   status: 'Pending' | 'Pending Payment' | 'Confirmed' | 'Completed' | 'Cancelled';
   notes?: string;
+  price?: number;
   createdAt: string;
 }
 

@@ -9,10 +9,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import React, { useState, useCallback } from 'react';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { vehicleImages } from '@/assets/images';
+import { API } from '../../constants/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -41,12 +44,39 @@ const serviceHistory: ServiceRecord[] = [];
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-import { Redirect, useRouter } from 'expo-router';
+import { Redirect, useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const [loyaltyPoints, setLoyaltyPoints] = useState(user?.loyaltyPoints || 0);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        fetchUser();
+      }
+    }, [user])
+  );
+
+  const fetchUser = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) return;
+      const res = await fetch(API.auth + '/me', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLoyaltyPoints(data.user.loyaltyPoints || 0);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
   
   const handleAddCar = () => {
     Alert.alert('Add Vehicle', 'This feature is coming soon!');
@@ -109,8 +139,10 @@ export default function ProfileScreen() {
               <Ionicons name="star" size={20} color="#2563eb" />
             </View>
             <ThemedText style={styles.statLabel}>Loyalty Points</ThemedText>
-            <ThemedText type="defaultSemiBold" style={styles.statValue}>0 pts</ThemedText>
-            <Text style={[styles.statLink, { color: '#2563eb' }]}>New Member</Text>
+            <ThemedText type="defaultSemiBold" style={styles.statValue}>{loyaltyPoints} pts</ThemedText>
+            <Text style={[styles.statLink, { color: '#2563eb' }]}>
+              {loyaltyPoints >= 1000 ? 'Silver Member' : 'New Member'}
+            </Text>
           </View>
         </View>
 
@@ -198,19 +230,25 @@ export default function ProfileScreen() {
               <Ionicons name="trophy" size={24} color="#fff" />
             </View>
             <View>
-              <Text style={styles.loyaltyTitle}>Starter Tier Member</Text>
+              <Text style={styles.loyaltyTitle}>
+                {loyaltyPoints >= 1000 ? 'Silver Tier Member' : 'Starter Tier Member'}
+              </Text>
               <Text style={styles.loyaltySubtitle}>Exclusive benefits & rewards</Text>
             </View>
           </View>
           <View style={styles.progressContainer}>
             <View style={styles.progressHeader}>
               <Text style={styles.progressLabel}>Points Progress</Text>
-              <Text style={styles.progressValue}>0 / 1,000</Text>
+              <Text style={styles.progressValue}>{loyaltyPoints} / 1,000</Text>
             </View>
             <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: '0%' }]} />
+              <View style={[styles.progressFill, { width: `${Math.min((loyaltyPoints / 1000) * 100, 100)}%` }]} />
             </View>
-            <Text style={styles.progressNote}>1000 points to Silver tier</Text>
+            <Text style={styles.progressNote}>
+              {loyaltyPoints >= 1000 
+                ? 'You have reached Silver tier!' 
+                : `${1000 - loyaltyPoints} points to Silver tier`}
+            </Text>
           </View>
         </View>
 

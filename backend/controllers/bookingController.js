@@ -1,9 +1,10 @@
 const Booking = require('../models/Booking');
+const User = require('../models/User');
 
 // Create a new booking
 exports.createBooking = async (req, res) => {
   try {
-    const { vehicleId, serviceType, scheduledDate, scheduledTime, notes } = req.body;
+    const { vehicleId, serviceType, scheduledDate, scheduledTime, notes, price } = req.body;
     
     const newBooking = await Booking.create({
       customerId: req.user.id,
@@ -11,8 +12,19 @@ exports.createBooking = async (req, res) => {
       serviceType,
       scheduledDate,
       scheduledTime,
-      notes
+      notes,
+      price: price || 0
     });
+    
+    // Update loyalty points (10 points for every 1000 LKR -> 1 point for every 100 LKR)
+    if (price && price > 0) {
+      const pointsEarned = Math.floor(price / 100);
+      if (pointsEarned > 0) {
+        await User.findByIdAndUpdate(req.user.id, {
+          $inc: { loyaltyPoints: pointsEarned }
+        });
+      }
+    }
     
     res.status(201).json(newBooking);
   } catch (error) {

@@ -147,7 +147,7 @@ export default function AppointmentsScreen() {
                     </View>
                   </View>
 
-                  {/* Date & Time */}
+                  {/* Date & Time & Price */}
                   <View style={styles.apptMeta}>
                     <View style={styles.metaRow}>
                       <Ionicons name="calendar-outline" size={14} color="#6b7280" />
@@ -157,6 +157,14 @@ export default function AppointmentsScreen() {
                       <Ionicons name="time-outline" size={14} color="#6b7280" />
                       <ThemedText style={styles.metaText}>{appt.scheduledTime}</ThemedText>
                     </View>
+                    {appt.price ? (
+                      <View style={styles.metaRow}>
+                        <Ionicons name="cash-outline" size={14} color="#166534" />
+                        <ThemedText style={[styles.metaText, { color: '#166534', fontWeight: 'bold' }]}>
+                          LKR {appt.price}
+                        </ThemedText>
+                      </View>
+                    ) : null}
                   </View>
 
                   {/* Actions */}

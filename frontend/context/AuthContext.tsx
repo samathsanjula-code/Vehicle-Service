@@ -12,6 +12,7 @@ type User = {
   email: string;
   phone: string;
   isAdmin?: boolean;
+  loyaltyPoints?: number;
 };
 
 type AuthContextType = {

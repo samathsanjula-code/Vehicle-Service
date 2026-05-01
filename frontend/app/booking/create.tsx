@@ -110,7 +110,8 @@ export default function BookingFormScreen() {
         scheduledDate: dateString,
         scheduledTime,
         notes,
-        status: 'Pending'
+        status: 'Pending',
+        price: totalAmount
       };
 
       let bookingId = params.editBookingId as string;

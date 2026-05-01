@@ -32,6 +32,10 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  price: {
+    type: Number,
+    default: 0
+  },
   createdAt: {
     type: Date,
     default: Date.now
