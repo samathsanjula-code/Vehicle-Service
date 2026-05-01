@@ -1,121 +1,135 @@
-import { ScrollView, View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { ScrollView, View, Text, Pressable, StyleSheet, useWindowDimensions, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import { API } from '../../constants/api';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-
-// ─── Data ────────────────────────────────────────────────────────────────────
-
+// --- DATA TYPE ---
 type ServiceItem = {
+  _id: string;
   icon: React.ComponentProps<typeof Ionicons>['name'];
   name: string;
   description: string;
+  price: number;
   features: string[];
-  accent: string;
-  accentBg: string;
+  category: string;
 };
 
-const services: ServiceItem[] = [
-  {
-    icon: 'build',
-    name: 'Mechanical Repairs',
-    description: 'Expert mechanical diagnostics and repairs for all makes and models',
-    features: ['Engine diagnostics', 'Brake repair', 'Transmission service', 'Suspension work'],
-    accent: '#2563eb',
-    accentBg: '#eff6ff',
-  },
-  {
-    icon: 'car',
-    name: 'Collision Repairs',
-    description: 'Professional bodywork and paint services',
-    features: ['Dent removal', 'Paint matching', 'Frame straightening', 'Insurance claims'],
-    accent: '#dc2626',
-    accentBg: '#fef2f2',
-  },
-  {
-    icon: 'water',
-    name: 'Lubrication Services',
-    description: 'Oil changes and fluid maintenance',
-    features: ['Oil change', 'Filter replacement', 'Fluid top-ups', 'Lubrication points'],
-    accent: '#d97706',
-    accentBg: '#fffbeb',
-  },
-  {
-    icon: 'sparkles',
-    name: 'Vehicle Detailing',
-    description: 'Complete interior and exterior cleaning',
-    features: ['Exterior wash & wax', 'Interior vacuuming', 'Leather treatment', 'Engine cleaning'],
-    accent: '#7c3aed',
-    accentBg: '#f5f3ff',
-  },
-  {
-    icon: 'resize',
-    name: 'Wheel Alignment',
-    description: 'Precision alignment for optimal performance',
-    features: ['4-wheel alignment', 'Tire balancing', 'Steering adjustment', 'Suspension check'],
-    accent: '#16a34a',
-    accentBg: '#f0fdf4',
-  },
-];
-
-// ─── Component ───────────────────────────────────────────────────────────────
-
+// --- MAIN SERVICES SCREEN ---
 export default function ServicesScreen() {
+  const { width } = useWindowDimensions();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [localServices, setLocalServices] = useState<ServiceItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchServices = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(API.services);
+      if (!response.ok) throw new Error('Failed to fetch services');
+      const data = await response.json();
+      setLocalServices(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchServices();
+  }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchServices();
+    }, [])
+  );
+
+  const isLargeScreen = width > 768;
+
+  const filteredServices = localServices.filter(s => 
+    s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    s.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
 
-        {/* Header */}
-        <ThemedView style={styles.header}>
-          <ThemedText type="title" style={styles.headerTitle}>Our Services</ThemedText>
-          <ThemedText style={styles.headerSubtitle}>
-            Professional automotive care for your vehicle
-          </ThemedText>
-        </ThemedView>
-
-        {/* Service Cards */}
-        {services.map((service) => (
-          <View key={service.name} style={[styles.card, { borderLeftColor: service.accent }]}>
-            {/* Card Header */}
-            <View style={styles.cardHeader}>
-              <View style={[styles.iconBox, { backgroundColor: service.accentBg }]}>
-                <Ionicons name={service.icon} size={24} color={service.accent} />
-              </View>
-              <View style={styles.cardHeadText}>
-                <ThemedText type="defaultSemiBold" style={styles.cardName}>
-                  {service.name}
-                </ThemedText>
-                <ThemedText style={styles.cardDescription}>{service.description}</ThemedText>
-              </View>
-            </View>
-
-            {/* Features */}
-            <View style={styles.featureList}>
-              {service.features.map((feature) => (
-                <View key={feature} style={styles.featureRow}>
-                  <Ionicons name="chevron-forward" size={14} color={service.accent} />
-                  <ThemedText style={styles.featureText}>{feature}</ThemedText>
-                </View>
-              ))}
-            </View>
-
-            {/* Book Button */}
-            <Pressable
-              style={({ pressed }) => [
-                styles.bookBtn,
-                { backgroundColor: service.accent },
-                pressed && { opacity: 0.85 },
-              ]}
-              onPress={() => router.push('/appointments')}>
-              <Text style={styles.bookBtnText}>Book Service</Text>
-            </Pressable>
+        {/* --- HERO SECTION --- */}
+        <View style={styles.heroSection}>
+          <Text style={styles.heroTitle}>Our Services</Text>
+          <Text style={styles.heroSubtitle}>
+            Professional automotive care tailored for your vehicle. Explore our comprehensive service catalog.
+          </Text>
+          
+          <View style={styles.searchContainer}>
+            <Ionicons name="search" size={20} color="#6B7280" style={styles.searchIcon} />
+            <TextInput 
+              style={styles.searchInput}
+              placeholder="Search services or categories..."
+              placeholderTextColor="#9CA3AF"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
           </View>
-        ))}
+        </View>
+
+        {/* --- SERVICES GRID --- */}
+        <View style={[styles.gridContainer, isLargeScreen && styles.gridContainerLarge]}>
+          {filteredServices.map((service) => (
+            <View key={service._id} style={[styles.card, isLargeScreen && styles.cardLarge]}>
+              
+              <View style={styles.cardHeader}>
+                <View style={styles.iconWrapper}>
+                  <Ionicons name={service.icon} size={28} color="#4F46E5" />
+                </View>
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{service.category}</Text>
+                </View>
+              </View>
+
+              <Text style={styles.cardTitle}>{service.name}</Text>
+              <Text style={styles.cardDescription}>{service.description}</Text>
+
+              <View style={styles.divider} />
+
+              <View style={styles.featuresContainer}>
+                {service.features.map((feature, idx) => (
+                  <View key={idx} style={styles.featureItem}>
+                    <Ionicons name="checkmark-circle" size={16} color="#10B981" />
+                    <Text style={styles.featureText}>{feature}</Text>
+                  </View>
+                ))}
+              </View>
+
+              <View style={styles.cardFooter}>
+                <Text style={styles.priceText}>Starting at LKR {service.price}</Text>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.primaryButton,
+                    pressed && styles.primaryButtonPressed,
+                  ]}
+                  onPress={() => router.push('/appointments')}>
+                  <Text style={styles.primaryButtonText}>Book Now</Text>
+                </Pressable>
+              </View>
+              
+            </View>
+          ))}
+          
+          {filteredServices.length === 0 && (
+            <View style={styles.emptyState}>
+              <Ionicons name="car-outline" size={48} color="#D1D5DB" />
+              <Text style={styles.emptyStateText}>No services found matching your search.</Text>
+            </View>
+          )}
+        </View>
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
@@ -123,97 +137,187 @@ export default function ServicesScreen() {
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
-
+// --- STYLES ---
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#F9FAFB',
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingBottom: 40,
   },
-  header: {
-    paddingHorizontal: 8,
-    paddingVertical: 20,
-    backgroundColor: 'transparent',
+  heroSection: {
+    paddingHorizontal: 24,
+    paddingTop: 40,
+    paddingBottom: 32,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    alignItems: 'center',
   },
-  headerTitle: {
+  heroTitle: {
+    fontSize: 32,
+    fontWeight: '800',
     color: '#111827',
-    marginBottom: 4,
+    marginBottom: 12,
+    textAlign: 'center',
+    letterSpacing: -0.5,
   },
-  headerSubtitle: {
-    color: '#6b7280',
+  heroSubtitle: {
+    fontSize: 16,
+    color: '#6B7',
+    textAlign: 'center',
+    maxWidth: 600,
+    lineHeight: 24,
+    marginBottom: 24,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    width: '100%',
+    maxWidth: 600,
+    height: 50,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#111827',
+    height: '100%',
+  },
+  gridContainer: {
+    padding: 16,
+    gap: 20,
+    alignItems: 'center',
+  },
+  gridContainerLarge: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    borderLeftWidth: 4,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 500,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  cardLarge: {
+    width: 400,
+    margin: 10,
   },
   cardHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'flex-start',
-    gap: 14,
-    marginBottom: 16,
+    marginBottom: 20,
   },
-  iconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
+  iconWrapper: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: '#EEF2FF',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardHeadText: {
-    flex: 1,
+  badge: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
-  cardName: {
-    fontSize: 17,
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#4B5563',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  cardTitle: {
+    fontSize: 22,
+    fontWeight: '700',
     color: '#111827',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   cardDescription: {
-    color: '#6b7280',
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 15,
+    color: '#6B7280',
+    lineHeight: 22,
+    marginBottom: 20,
   },
-  featureList: {
-    gap: 8,
-    marginBottom: 16,
-    paddingLeft: 4,
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginBottom: 20,
   },
-  featureRow: {
+  featuresContainer: {
+    gap: 12,
+    marginBottom: 24,
+  },
+  featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 10,
   },
   featureText: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#374151',
   },
-  bookBtn: {
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 'auto',
+  },
+  priceText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  primaryButton: {
+    backgroundColor: '#4F46E5',
+    paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 4,
   },
-  bookBtnText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 14,
-    letterSpacing: 0.3,
+  primaryButtonPressed: {
+    backgroundColor: '#4338CA',
+  },
+  primaryButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 15,
+  },
+  emptyState: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyStateText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
   },
   bottomSpacer: {
-    height: 24,
+    height: 40,
   },
 });

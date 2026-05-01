@@ -129,6 +129,34 @@ export default function AdminDashboard() {
             </View>
             <Ionicons name="chevron-forward" size={24} color="#9ca3af" />
           </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.actionCard} 
+            onPress={() => router.push('/(admin)/add-service')}
+          >
+            <View style={[styles.actionIconBg, { backgroundColor: '#fce7f3' }]}>
+              <Ionicons name="add-circle" size={28} color="#db2777" />
+            </View>
+            <View style={styles.actionText}>
+              <Text style={styles.actionTitle}>Add Services</Text>
+              <Text style={styles.actionDesc}>Create a new vehicle service offering</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color="#9ca3af" />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.actionCard} 
+            onPress={() => router.push('/(admin)/manage-services')}
+          >
+            <View style={[styles.actionIconBg, { backgroundColor: '#dcfce7' }]}>
+              <Ionicons name="construct" size={28} color="#16a34a" />
+            </View>
+            <View style={styles.actionText}>
+              <Text style={styles.actionTitle}>Manage Services</Text>
+              <Text style={styles.actionDesc}>View, edit, or delete existing services</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color="#9ca3af" />
+          </TouchableOpacity>
         </View>
 
       </ScrollView>
