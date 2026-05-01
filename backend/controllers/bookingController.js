@@ -1,9 +1,10 @@
 const Booking = require('../models/Booking');
+const User = require('../models/User');
 
 // Create a new booking
 exports.createBooking = async (req, res) => {
   try {
-    const { vehicleId, serviceType, scheduledDate, scheduledTime, notes } = req.body;
+    const { vehicleId, serviceType, scheduledDate, scheduledTime, notes, price } = req.body;
     
     const newBooking = await Booking.create({
       customerId: req.user.id,
@@ -11,8 +12,19 @@ exports.createBooking = async (req, res) => {
       serviceType,
       scheduledDate,
       scheduledTime,
-      notes
+      notes,
+      price: price || 0
     });
+    
+    // Update loyalty points (10 points for every 1000 LKR -> 1 point for every 100 LKR)
+    if (price && price > 0) {
+      const pointsEarned = Math.floor(price / 100);
+      if (pointsEarned > 0) {
+        await User.findByIdAndUpdate(req.user.id, {
+          $inc: { loyaltyPoints: pointsEarned }
+        });
+      }
+    }
     
     res.status(201).json(newBooking);
   } catch (error) {
@@ -25,8 +37,7 @@ exports.createBooking = async (req, res) => {
 exports.getAllBookings = async (req, res) => {
   try {
     const bookings = await Booking.find()
-      .populate('customerId', 'fullName email phone')
-      .populate('vehicleId');
+      .populate('customerId', 'fullName email phone');
     res.status(200).json(bookings);
   } catch (error) {
     console.error('Error fetching bookings:', error);
@@ -38,8 +49,7 @@ exports.getAllBookings = async (req, res) => {
 exports.getBookingById = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
-      .populate('customerId', 'fullName email phone')
-      .populate('vehicleId');
+      .populate('customerId', 'fullName email phone');
       
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
@@ -66,7 +76,6 @@ exports.getBookingsByUser = async (req, res) => {
     }
     
     const bookings = await Booking.find({ customerId: req.params.userId })
-      .populate('vehicleId')
       .sort({ scheduledDate: 1, scheduledTime: 1 });
       
     res.status(200).json(bookings);

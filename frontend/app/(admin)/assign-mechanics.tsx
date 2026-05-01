@@ -1,22 +1,98 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-
-// Mock Appointments
-const mockBookings = [
-  { id: "B001", customer: "John Silva", service: "Engine Repair", date: "2026-04-08", status: "Pending" },
-  { id: "B002", customer: "Mary Fernando", service: "Oil Change", date: "2026-04-08", status: "Pending" },
-  { id: "B003", customer: "David Perera", service: "Brake Service", date: "2026-04-09", status: "Pending" },
-];
+import { useAuth } from '../../context/AuthContext';
+import { BOOKINGS_URL, API } from '../../constants/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function AssignMechanics() {
   const router = useRouter();
+  const { token } = useAuth();
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [mechanics, setMechanics] = useState<any[]>([]);
+  const [selectedMechanics, setSelectedMechanics] = useState<Record<string, string>>({});
+  const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleAssignClick = (bookingId: string) => {
-    Alert.alert('Assign Feature', 'This will open a modal fetching available mechanics to assign to Booking: ' + bookingId);
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const tokenStr = token || await AsyncStorage.getItem('token');
+      
+      // Fetch mechanics
+      const mechRes = await fetch(API.mechanics, {
+        headers: { Authorization: `Bearer ${tokenStr}` }
+      });
+      if (mechRes.ok) {
+        const mechData = await mechRes.json();
+        setMechanics(mechData.filter((m: any) => m.availability === 'Available'));
+      }
+
+      // Fetch bookings
+      const res = await fetch(BOOKINGS_URL, {
+        headers: { Authorization: `Bearer ${tokenStr}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // Filter only pending bookings
+        const pendingBookings = data.filter((b: any) => b.status === 'Pending');
+        setBookings(pendingBookings);
+      } else {
+        Alert.alert('Error', 'Failed to load bookings');
+      }
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Error', 'Network request failed');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleAssignClick = async (bookingId: string) => {
+    const mechanicId = selectedMechanics[bookingId];
+    if (!mechanicId) {
+      Alert.alert('Error', 'Please select a mechanic first.');
+      return;
+    }
+
+    try {
+      const tokenStr = token || await AsyncStorage.getItem('token');
+      const res = await fetch(`${BOOKINGS_URL}/${bookingId}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${tokenStr}` 
+        },
+        body: JSON.stringify({ 
+          status: 'Assigned',
+          assignedMechanic: mechanicId 
+        })
+      });
+
+      if (res.ok) {
+        Alert.alert('Success', 'Mechanic assigned successfully!');
+        setBookings(prev => prev.filter(b => b._id !== bookingId));
+      } else {
+        Alert.alert('Error', 'Failed to assign mechanic.');
+      }
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Error', 'Network request failed');
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#dc2626" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
@@ -28,33 +104,74 @@ export default function AssignMechanics() {
       </View>
 
       <ScrollView contentContainerStyle={styles.listContainer}>
-        {mockBookings.map((booking) => (
-          <View key={booking.id} style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View>
-                <Text style={styles.bookingId}>Booking #{booking.id}</Text>
-                <Text style={styles.customer}>{booking.customer}</Text>
+        {bookings.length === 0 ? (
+          <Text style={{ textAlign: 'center', color: '#6b7280', marginTop: 40, fontSize: 16 }}>No pending bookings found.</Text>
+        ) : (
+          bookings.map((booking) => (
+            <View key={booking._id} style={styles.card}>
+              <View style={styles.cardHeader}>
+                <View>
+                  <Text style={styles.bookingId}>Booking #{booking._id.slice(-6).toUpperCase()}</Text>
+                  <Text style={styles.customer}>{booking.customerId?.fullName || 'Unknown Customer'}</Text>
+                </View>
+                <View style={styles.iconBg}>
+                  <Ionicons name="calendar" size={20} color="#dc2626" />
+                </View>
               </View>
-              <View style={styles.iconBg}>
-                <Ionicons name="calendar" size={20} color="#dc2626" />
+
+              <View style={styles.detailsRow}>
+                <Text style={styles.serviceText}>
+                  {Array.isArray(booking.serviceType) ? booking.serviceType.join(', ') : booking.serviceType}
+                </Text>
+                <Text style={styles.dateText}>{new Date(booking.scheduledDate).toLocaleDateString()} at {booking.scheduledTime}</Text>
+              </View>
+
+              <View style={styles.divider} />
+
+              <View style={{ marginBottom: 12 }}>
+                <Text style={{ fontSize: 13, color: '#4b5563', marginBottom: 4 }}>Select Mechanic:</Text>
+                <TouchableOpacity 
+                  style={{ borderWidth: 1, borderColor: '#d1d5db', padding: 8, borderRadius: 8, backgroundColor: '#f9fafb' }}
+                  onPress={() => setDropdownOpen(dropdownOpen === booking._id ? null : booking._id)}
+                >
+                  <Text style={{ color: selectedMechanics[booking._id] ? '#111827' : '#9ca3af' }}>
+                    {selectedMechanics[booking._id] 
+                      ? mechanics.find(m => m._id === selectedMechanics[booking._id])?.name 
+                      : 'Tap to select...'}
+                  </Text>
+                </TouchableOpacity>
+
+                {dropdownOpen === booking._id && (
+                  <View style={{ marginTop: 4, borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, backgroundColor: '#fff' }}>
+                    {mechanics.length === 0 ? (
+                      <Text style={{ padding: 8, color: '#6b7280' }}>No available mechanics</Text>
+                    ) : (
+                      mechanics.map(m => (
+                        <TouchableOpacity 
+                          key={m._id} 
+                          style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}
+                          onPress={() => {
+                            setSelectedMechanics(prev => ({ ...prev, [booking._id]: m._id }));
+                            setDropdownOpen(null);
+                          }}
+                        >
+                          <Text style={{ color: '#111827' }}>{m.name} ({m.specialization})</Text>
+                        </TouchableOpacity>
+                      ))
+                    )}
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.actionRow}>
+                <Text style={styles.statusText}>Status: <Text style={{color: '#d97706'}}>{booking.status}</Text></Text>
+                <TouchableOpacity style={styles.assignBtn} onPress={() => handleAssignClick(booking._id)}>
+                  <Text style={styles.assignBtnText}>Assign Mechanic</Text>
+                </TouchableOpacity>
               </View>
             </View>
-
-            <View style={styles.detailsRow}>
-              <Text style={styles.serviceText}>{booking.service}</Text>
-              <Text style={styles.dateText}>{booking.date}</Text>
-            </View>
-
-            <View style={styles.divider} />
-
-            <View style={styles.actionRow}>
-              <Text style={styles.statusText}>Status: <Text style={{color: '#d97706'}}>{booking.status}</Text></Text>
-              <TouchableOpacity style={styles.assignBtn} onPress={() => handleAssignClick(booking.id)}>
-                <Text style={styles.assignBtnText}>Assign Mechanic</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
+          ))
+        )}
       </ScrollView>
     </SafeAreaView>
   );

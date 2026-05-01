@@ -48,6 +48,7 @@ router.post('/register', async (req, res) => {
         fullName: newUser.fullName,
         email: newUser.email,
         phone: newUser.phone,
+        loyaltyPoints: newUser.loyaltyPoints,
       },
     });
   } catch (err) {
@@ -103,6 +104,7 @@ router.post('/login', async (req, res) => {
         email: user.email,
         phone: user.phone,
         isAdmin: user.isAdmin,
+        loyaltyPoints: user.loyaltyPoints,
       },
     });
   } catch (err) {

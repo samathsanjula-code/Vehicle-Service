@@ -16,9 +16,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 const bookingRoutes = require('./routes/bookingRoutes');
+const mechanicRoutes = require('./routes/mechanicRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/mechanics', mechanicRoutes);
 app.use('/api/services', require('./routes/services'));
 
 // Health check

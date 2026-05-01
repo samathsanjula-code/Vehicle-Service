@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { API } from '../../constants/api';
+import { useAuth } from '../../context/AuthContext';
 
 // --- DATA TYPE ---
 type ServiceItem = {
@@ -20,6 +21,7 @@ type ServiceItem = {
 // --- MAIN SERVICES SCREEN ---
 export default function ServicesScreen() {
   const { width } = useWindowDimensions();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [localServices, setLocalServices] = useState<ServiceItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -132,10 +134,23 @@ export default function ServicesScreen() {
                     styles.primaryButton,
                     pressed && styles.primaryButtonPressed,
                   ]}
-                  onPress={() => router.push({
-                    pathname: '/booking/create',
-                    params: { serviceType: service.name }
-                  })}>
+                  onPress={() => {
+                    if (!user) {
+                      Alert.alert(
+                        'Login Required',
+                        'Please log in to book a service.',
+                        [
+                          { text: 'Cancel', style: 'cancel' },
+                          { text: 'Login', onPress: () => router.push('/(auth)/login') }
+                        ]
+                      );
+                      return;
+                    }
+                    router.push({
+                      pathname: '/booking/create',
+                      params: { serviceType: service.name }
+                    });
+                  }}>
                   <Text style={styles.primaryButtonText}>Book Now</Text>
                 </Pressable>
               </View>
