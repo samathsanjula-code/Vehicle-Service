@@ -41,9 +41,8 @@ yarn-error.*
 app-example
 
 # generated native folders
-/frontend/ios
-/frontend/android
-/android
+frontend/ios/
+frontend/android/
 
-# VS Code
-.vscode/
+# root modules
+node_modules/
