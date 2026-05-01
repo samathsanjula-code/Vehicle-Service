@@ -9,7 +9,9 @@ import {
   Alert, 
   KeyboardAvoidingView, 
   Platform,
-  ActivityIndicator
+  ActivityIndicator,
+  Modal,
+  Pressable
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -71,6 +73,18 @@ const ModernInput = ({
   );
 };
 
+// --- PREDEFINED CATEGORIES & ICONS ---
+const CATEGORIES = [
+  { name: 'Washing & Cleaning', icon: 'water-outline' },
+  { name: 'Oil & Filters', icon: 'color-fill-outline' },
+  { name: 'Tire & Wheels', icon: 'disc-outline' },
+  { name: 'Engine Diagnostics', icon: 'pulse-outline' },
+  { name: 'AC & Cooling', icon: 'snow-outline' },
+  { name: 'Battery & Electrical', icon: 'battery-charging-outline' },
+  { name: 'Body & Paint', icon: 'color-palette-outline' },
+  { name: 'General Repair', icon: 'build-outline' },
+];
+
 // --- MAIN EDIT SERVICE SCREEN ---
 export default function EditServiceScreen() {
   const router = useRouter();
@@ -84,6 +98,7 @@ export default function EditServiceScreen() {
   const [features, setFeatures] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCategoryModalVisible, setCategoryModalVisible] = useState(false);
 
   useEffect(() => {
     const fetchService = async () => {
@@ -130,6 +145,7 @@ export default function EditServiceScreen() {
           discountPrice: discountPrice ? parseFloat(discountPrice) : undefined,
           description: description,
           features: newFeaturesArray,
+          icon: CATEGORIES.find(c => c.name === category)?.icon || 'sparkles-outline',
         }),
       });
 
@@ -193,14 +209,20 @@ export default function EditServiceScreen() {
                 onChangeText={setServiceName}
               />
 
-              <ModernInput
-                label="Category"
-                icon="grid-outline"
-                required={true}
-                placeholder="e.g. Washing, Detailing"
-                value={category}
-                onChangeText={setCategory}
-              />
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Category <Text style={styles.required}>*</Text></Text>
+                <TouchableOpacity 
+                  style={[styles.inputContainer, { alignItems: 'center' }]} 
+                  onPress={() => setCategoryModalVisible(true)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="grid-outline" size={20} color={category ? '#4F46E5' : '#9CA3AF'} style={styles.inputIcon} />
+                  <Text style={[styles.input, { color: category ? '#111827' : '#9CA3AF', marginTop: Platform.OS === 'ios' ? 4 : 0 }]}>
+                    {category ? category : "Select a Category"}
+                  </Text>
+                  <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
+                </TouchableOpacity>
+              </View>
 
               <ModernInput
                 label="Price (LKR)"
@@ -268,6 +290,43 @@ export default function EditServiceScreen() {
             <Text style={styles.saveButtonText}>{isSaving ? 'Saving...' : 'Save Changes'}</Text>
           </TouchableOpacity>
         </View>
+
+        {/* --- DROPDOWN MODAL --- */}
+        <Modal
+          visible={isCategoryModalVisible}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setCategoryModalVisible(false)}
+        >
+          <Pressable style={styles.modalOverlay} onPress={() => setCategoryModalVisible(false)}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Select Category</Text>
+                <TouchableOpacity onPress={() => setCategoryModalVisible(false)}>
+                  <Ionicons name="close" size={24} color="#6B7280" />
+                </TouchableOpacity>
+              </View>
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {CATEGORIES.map((cat, idx) => (
+                  <TouchableOpacity
+                    key={idx}
+                    style={styles.dropdownItem}
+                    onPress={() => {
+                      setCategory(cat.name);
+                      setCategoryModalVisible(false);
+                    }}
+                  >
+                    <Ionicons name={cat.icon as any} size={22} color="#4F46E5" style={{ marginRight: 12 }} />
+                    <Text style={styles.dropdownItemText}>{cat.name}</Text>
+                    {category === cat.name && (
+                      <Ionicons name="checkmark" size={22} color="#10B981" style={{ marginLeft: 'auto' }} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          </Pressable>
+        </Modal>
 
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -391,6 +450,36 @@ const styles = StyleSheet.create({
     fontSize: 15,
     minHeight: 28,
   },
+  categoryScroll: {
+    paddingVertical: 4,
+    gap: 10,
+  },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+    marginRight: 8,
+  },
+  categoryChipSelected: {
+    backgroundColor: '#4F46E5',
+    borderColor: '#4F46E5',
+  },
+  chipIcon: {
+    marginRight: 6,
+  },
+  chipText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4F46E5',
+  },
+  chipTextSelected: {
+    color: '#FFFFFF',
+  },
   textAreaContainer: {
     minHeight: 120,
   },
@@ -432,5 +521,40 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '70%',
+    padding: 24,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#111827',
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  dropdownItemText: {
+    fontSize: 16,
+    color: '#374151',
+    fontWeight: '500',
   },
 });
