@@ -12,6 +12,7 @@ export const API = {
   register: `${BASE_URL}/api/auth/register`,
   auth:     `${BASE_URL}/api/auth`,
   services: `${BASE_URL}/api/services`,
+  mechanics: `${BASE_URL}/api/mechanics`,
 } as const;
 
 export const BOOKINGS_URL = `${BASE_URL}/api/bookings`;

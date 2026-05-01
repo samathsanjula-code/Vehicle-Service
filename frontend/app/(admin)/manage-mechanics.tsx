@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
+import { API } from '../../constants/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ManageMechanics() {
   const router = useRouter();
@@ -13,12 +15,16 @@ export default function ManageMechanics() {
 
   const fetchMechanics = async () => {
     try {
-      const res = await fetch('http://192.168.1.100:5005/api/mechanics', { // UPDATE IP
-        headers: { Authorization: `Bearer ${token}` }
+      const tokenStr = token || await AsyncStorage.getItem('token');
+      const res = await fetch(API.mechanics, {
+        headers: { Authorization: `Bearer ${tokenStr}` }
       });
       if (res.ok) {
         const data = await res.json();
         setMechanics(data);
+      } else {
+        console.error('Failed to load mechanics:', await res.text());
+        Alert.alert('Error', 'Could not load mechanics');
       }
     } catch (e) {
       console.log(e);
@@ -40,9 +46,10 @@ export default function ManageMechanics() {
         style: 'destructive',
         onPress: async () => {
           try {
-            const res = await fetch(`http://192.168.1.100:5005/api/mechanics/${id}`, {
+            const tokenStr = token || await AsyncStorage.getItem('token');
+            const res = await fetch(`${API.mechanics}/${id}`, {
               method: 'DELETE',
-              headers: { Authorization: `Bearer ${token}` }
+              headers: { Authorization: `Bearer ${tokenStr}` }
             });
             if (res.ok) {
               setMechanics(prev => prev.filter(m => m._id !== id));

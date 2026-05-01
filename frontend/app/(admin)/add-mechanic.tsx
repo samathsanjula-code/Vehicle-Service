@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
+import { API } from '../../constants/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function AddMechanic() {
   const router = useRouter();
@@ -37,11 +39,12 @@ export default function AddMechanic() {
 
     setLoading(true);
     try {
-      const res = await fetch('http://192.168.1.100:5005/api/mechanics', { // UPDATE IP
+      const tokenStr = token || await AsyncStorage.getItem('token');
+      const res = await fetch(API.mechanics, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
+          Authorization: `Bearer ${tokenStr}` 
         },
         body: JSON.stringify(formData)
       });
