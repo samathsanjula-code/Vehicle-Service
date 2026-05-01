@@ -1,30 +1,28 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import {
-  ScrollView,
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
   Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { vehicleImages } from '@/assets/images';
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
 type Vehicle = {
-  id: number;
-  name: string;
-  plate: string;
-  image: ReturnType<typeof require>;
-  status: string;
-  statusColor: string;
-  statusDot: string;
-  healthy: boolean;
+  _id: string;
+  brand: string;
+  model: string;
+  year?: string;
+  regNumber: string;
+  image?: string;
+  status?: string;
 };
 
 type ServiceRecord = {
@@ -36,24 +34,46 @@ type ServiceRecord = {
   status: string;
 };
 
-const vehicles: Vehicle[] = [];
-const serviceHistory: ServiceRecord[] = [];
-
 // ─── Component ───────────────────────────────────────────────────────────────
 
-import { Redirect, useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
+import { useState, useCallback } from 'react';
+import { API } from '@/constants/api';
+import { ActivityIndicator } from 'react-native';
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuth();
+  const { user, logout, token } = useAuth();
   const router = useRouter();
-  
-  const handleAddCar = () => {
-    Alert.alert('Add Vehicle', 'This feature is coming soon!');
-  };
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleEditProfile = () => {
-    Alert.alert('Edit Profile', 'Profile editing coming soon!');
+  const fetchData = useCallback(async () => {
+    if (!token) return;
+    try {
+      setLoading(true);
+      const response = await fetch(API.vehicles, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setVehicles(data);
+      }
+    } catch (err) {
+      console.error('Error fetching data:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [fetchData])
+  );
+
+  const handleAddCar = () => {
+    router.push('/add-vehicle');
   };
 
   if (!user) {
@@ -71,485 +91,398 @@ export default function ProfileScreen() {
     );
   }
 
-  return (
-    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+  const mockServices = [
+    {
+      id: 1,
+      name: 'Full Engine Service',
+      vehicle: vehicles.length > 0 ? `${vehicles[0].brand} ${vehicles[0].model}` : 'BMW 5 Series',
+      date: 'March 15, 2026',
+      price: 'LKR 45,000',
+      status: 'Completed'
+    }
+  ];
 
-        {/* ── Profile Header ─────────────────────────────────────────────── */}
-        <View style={styles.profileHeader}>
-          <View style={styles.avatarWrapper}>
-            <View style={styles.avatarCircle}>
-              <Text style={styles.avatarInitials}>{user.fullName ? user.fullName[0].toUpperCase() : 'U'}</Text>
+  return (
+    <View style={styles.container}>
+      {/* ── Custom Header ─────────────────────────────────────────────── */}
+      <View style={styles.header}>
+        <Pressable style={styles.menuBtn}>
+          <Ionicons name="menu-outline" size={28} color="#fff" />
+        </Pressable>
+        <Text style={styles.headerTitle}>MOTOHUB</Text>
+        <View style={{ width: 28 }} />
+      </View>
+
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        
+        {/* ── Stats Row ─────────────────────────────────────────────────── */}
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <View style={[styles.statIconCircle, { backgroundColor: '#fff1f2' }]}>
+              <Ionicons name="time" size={18} color="#dc2626" />
             </View>
-            <Pressable style={styles.editAvatarBtn} onPress={handleEditProfile}>
-              <Ionicons name="pencil" size={12} color="#fff" />
+            <Text style={styles.statLabel}>MY RECORDS</Text>
+            <Text style={styles.statValue}>{vehicles.length} RECORD</Text>
+            <Pressable onPress={() => router.push('/service-history')}>
+              <Text style={styles.statLink}>View All  <Ionicons name="chevron-forward" size={10} /></Text>
             </Pressable>
           </View>
-          <ThemedText type="subtitle" style={styles.profileName}>{user.fullName}</ThemedText>
-          <ThemedText style={styles.profileMeta}>{user.email}</ThemedText>
-          <Pressable onPress={logout} style={{ marginTop: 10 }}>
-             <Text style={{ color: '#dc2626', fontWeight: 'bold' }}>Logout</Text>
+
+          <View style={styles.statCard}>
+            <View style={[styles.statIconCircle, { backgroundColor: '#eff6ff' }]}>
+              <Ionicons name="star" size={18} color="#2563eb" />
+            </View>
+            <Text style={styles.statLabel}>LOYALTY POINTS</Text>
+            <Text style={styles.statValue}>2,450 pts</Text>
+            <Text style={[styles.statLink, { color: '#2563eb' }]}>Gold Tier Status</Text>
+          </View>
+        </View>
+
+        {/* ── My Vehicles Section ────────────────────────────────────────── */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={styles.sectionTitle}>My Vehicles</Text>
+              
+              <Text style={styles.sectionSubtitle}>Registered for precision service</Text>
+            </View>
+            <Pressable style={styles.addCarBtn} onPress={handleAddCar}>
+              <Ionicons name="add" size={18} color="#fff" />
+              <Text style={styles.addCarBtnText}>Add Vehicles</Text>
+            </Pressable>
+          </View>
+
+          {loading ? (
+            <ActivityIndicator color="#dc2626" style={{ marginVertical: 20 }} />
+          ) : vehicles.length === 0 ? (
+            <View style={styles.emptyVehicles}>
+              <Text style={styles.emptyText}>No vehicles registered yet.</Text>
+            </View>
+          ) : (
+            vehicles.map(vehicle => (
+              <View key={vehicle._id} style={styles.vehicleCard}>
+                <Image 
+                  source={{ uri: vehicle.image}} 
+                  style={styles.vehicleImg}
+                  contentFit="cover"
+                />
+                <View style={styles.vehicleDetails}>
+                  <View style={styles.vehicleHeaderRow}>
+                    <Text style={styles.vehicleName}>{vehicle.brand} {vehicle.model}</Text>
+                    <Ionicons name="ellipsis-vertical" size={18} color="#9ca3af" />
+                  </View>
+                  <Text style={styles.vehicleSubText}>{vehicle.regNumber} • {vehicle.year}</Text>
+                  <View style={styles.statusRow}>
+                    <View style={[styles.statusDot, { backgroundColor: '#10b981' }]} />
+                    <Text style={[styles.statusText, { color: '#10b981' }]}>{vehicle.status || 'HEALTHY'}</Text>
+                  </View>
+                </View>
+              </View>
+            ))
+          )}
+        </View>
+
+        {/* ── Recent Services Section ────────────────────────────────────── */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recent Services</Text>
+            <Pressable>
+              <Text style={styles.viewAllLink}>View All</Text>
+            </Pressable>
+          </View>
+
+          {mockServices.map(service => (
+            <View key={service.id} style={styles.serviceCard}>
+              <View style={styles.serviceMain}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.serviceName}>{service.name}</Text>
+                  <Text style={styles.serviceVehicle}>{service.vehicle}</Text>
+                  <View style={styles.serviceDateRow}>
+                    <Ionicons name="time-outline" size={14} color="#9ca3af" style={{ marginRight: 4 }} />
+                    <Text style={styles.serviceDate}>{service.date}</Text>
+                  </View>
+                </View>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={styles.servicePrice}>{service.price}</Text>
+                  <View style={styles.completedBadge}>
+                    <Text style={styles.completedBadgeText}>{service.status}</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* ── Bottom Buttons ────────────────────────────────────────────── */}
+        <View style={{ paddingHorizontal: 20, marginBottom: 40 }}>
+          <Pressable onPress={logout} style={styles.logoutBtn}>
+            <Ionicons name="log-out-outline" size={20} color="#dc2626" />
+            <Text style={styles.logoutText}>Sign Out</Text>
           </Pressable>
         </View>
 
-        {/* ── Stats Row (Dynamic zero) ─────────────────────────────────────── */}
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <View style={[styles.statIconBox, { backgroundColor: '#fef2f2' }]}>
-              <Ionicons name="time" size={20} color="#dc2626" />
-            </View>
-            <ThemedText style={styles.statLabel}>Service History</ThemedText>
-            <ThemedText type="defaultSemiBold" style={styles.statValue}>0 Records</ThemedText>
-            <Pressable>
-              <Text style={styles.statLink}>View All →</Text>
-            </Pressable>
-          </View>
-          <View style={styles.statCard}>
-            <View style={[styles.statIconBox, { backgroundColor: '#eff6ff' }]}>
-              <Ionicons name="star" size={20} color="#2563eb" />
-            </View>
-            <ThemedText style={styles.statLabel}>Loyalty Points</ThemedText>
-            <ThemedText type="defaultSemiBold" style={styles.statValue}>0 pts</ThemedText>
-            <Text style={[styles.statLink, { color: '#2563eb' }]}>New Member</Text>
-          </View>
-        </View>
-
-        {/* ── My Vehicles ────────────────────────────────────────────────── */}
-        <ThemedView style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <ThemedText type="subtitle" style={styles.sectionTitle}>My Vehicles</ThemedText>
-            <Pressable
-              style={({ pressed }) => [styles.addCarBtn, pressed && { opacity: 0.85 }]}
-              onPress={handleAddCar}>
-              <Ionicons name="add" size={16} color="#fff" />
-              <Text style={styles.addCarBtnText}>Add Car</Text>
-            </Pressable>
-          </View>
-          <ThemedText style={styles.sectionSubtitle}>Registered for precision service</ThemedText>
-
-          {vehicles.map((vehicle) => (
-            <View key={vehicle.id} style={styles.vehicleCard}>
-              <Image
-                source={vehicle.image}
-                style={styles.vehicleImage}
-                contentFit="cover"
-                transition={300}
-              />
-              <View style={styles.vehicleInfo}>
-                <View style={styles.vehicleTopRow}>
-                  <View style={{ flex: 1 }}>
-                    <ThemedText type="defaultSemiBold" style={styles.vehicleName}>
-                      {vehicle.name}
-                    </ThemedText>
-                    <ThemedText style={styles.vehiclePlate}>{vehicle.plate}</ThemedText>
-                  </View>
-                  <Pressable onPress={() => Alert.alert('Options', `Manage ${vehicle.name}`)}>
-                    <Ionicons name="ellipsis-vertical" size={18} color="#9ca3af" />
-                  </Pressable>
-                </View>
-                <View style={styles.vehicleStatusRow}>
-                  <View style={[styles.statusDot, { backgroundColor: vehicle.statusDot }]} />
-                  <Text style={[styles.vehicleStatus, { color: vehicle.statusColor }]}>
-                    {vehicle.status}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          ))}
-        </ThemedView>
-
-        {/* ── Recent Services ────────────────────────────────────────────── */}
-        <ThemedView style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <ThemedText type="subtitle" style={styles.sectionTitle}>Recent Services</ThemedText>
-            <Pressable>
-              <Text style={styles.statLink}>View All</Text>
-            </Pressable>
-          </View>
-
-          {serviceHistory.map((record) => (
-            <View key={record.id} style={styles.historyCard}>
-              <View style={{ flex: 1 }}>
-                <ThemedText type="defaultSemiBold" style={styles.historyName}>
-                  {record.service}
-                </ThemedText>
-                <ThemedText style={styles.historyVehicle}>{record.vehicle}</ThemedText>
-                <View style={styles.historyDateRow}>
-                  <Ionicons name="time-outline" size={12} color="#9ca3af" />
-                  <ThemedText style={styles.historyDate}>{record.date}</ThemedText>
-                </View>
-              </View>
-              <View style={styles.historyRight}>
-                <ThemedText type="defaultSemiBold" style={styles.historyCost}>
-                  {record.cost}
-                </ThemedText>
-                <View style={styles.completedBadge}>
-                  <Text style={styles.completedBadgeText}>{record.status}</Text>
-                </View>
-              </View>
-            </View>
-          ))}
-        </ThemedView>
-
-        {/* ── Loyalty Card ───────────────────────────────────────────────── */}
-        <View style={styles.loyaltyCard}>
-          <View style={styles.loyaltyHeader}>
-            <View style={styles.loyaltyIconBg}>
-              <Ionicons name="trophy" size={24} color="#fff" />
-            </View>
-            <View>
-              <Text style={styles.loyaltyTitle}>Starter Tier Member</Text>
-              <Text style={styles.loyaltySubtitle}>Exclusive benefits & rewards</Text>
-            </View>
-          </View>
-          <View style={styles.progressContainer}>
-            <View style={styles.progressHeader}>
-              <Text style={styles.progressLabel}>Points Progress</Text>
-              <Text style={styles.progressValue}>0 / 1,000</Text>
-            </View>
-            <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: '0%' }]} />
-            </View>
-            <Text style={styles.progressNote}>1000 points to Silver tier</Text>
-          </View>
-        </View>
-
-        <View style={styles.bottomSpacer} />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
-
-// ─── Styles ──────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#f8fafc',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  header: {
+    backgroundColor: '#dc2626',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 60,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
+  menuBtn: {
+    padding: 4,
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: '900',
+    letterSpacing: 1.5,
   },
   scrollView: {
     flex: 1,
   },
-
-  // Profile header
-  profileHeader: {
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    paddingTop: 32,
-    paddingBottom: 28,
-    paddingHorizontal: 24,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  avatarWrapper: {
-    position: 'relative',
-    marginBottom: 16,
-  },
-  avatarCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 22,
-    backgroundColor: '#dc2626',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarInitials: {
-    color: '#fff',
-    fontSize: 32,
-    fontWeight: '900',
-    letterSpacing: 2,
-  },
-  editAvatarBtn: {
-    position: 'absolute',
-    bottom: -4,
-    right: -4,
-    backgroundColor: '#dc2626',
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
-  profileName: {
-    color: '#111827',
-    fontSize: 22,
-    marginBottom: 4,
-  },
-  profileMeta: {
-    color: '#9ca3af',
-    fontSize: 11,
-    letterSpacing: 1.5,
-    fontWeight: '600',
-  },
-
-  // Stats
   statsRow: {
     flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    padding: 20,
+    gap: 16,
   },
   statCard: {
     flex: 1,
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    gap: 4,
+    borderRadius: 24,
+    padding: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 15,
+    elevation: 5,
   },
-  statIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+  statIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
+    marginBottom: 12,
   },
   statLabel: {
     fontSize: 10,
+    fontWeight: '800',
     color: '#9ca3af',
-    textTransform: 'uppercase',
     letterSpacing: 0.5,
+    marginBottom: 6,
   },
   statValue: {
-    fontSize: 18,
+    fontSize: 20,
+    fontWeight: '800',
     color: '#111827',
+    marginBottom: 6,
   },
   statLink: {
-    color: '#dc2626',
     fontSize: 11,
     fontWeight: '700',
+    color: '#dc2626',
   },
-
-  // Sections
   section: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    gap: 14,
-    marginBottom: 4,
-    backgroundColor: 'transparent',
+    paddingHorizontal: 20,
+    marginBottom: 32,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 16,
   },
   sectionTitle: {
+    fontSize: 22,
+    fontWeight: '800',
     color: '#111827',
   },
   sectionSubtitle: {
+    fontSize: 13,
     color: '#9ca3af',
-    fontSize: 12,
-    marginTop: -8,
+    marginTop: 2,
   },
   addCarBtn: {
     backgroundColor: '#dc2626',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    gap: 6,
     shadowColor: '#dc2626',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   addCarBtnText: {
     color: '#fff',
     fontWeight: '700',
-    fontSize: 13,
+    fontSize: 14,
   },
-
-  // Vehicle cards
   vehicleCard: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    overflow: 'hidden',
+    borderRadius: 24,
+    padding: 16,
     flexDirection: 'row',
-    gap: 0,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
     elevation: 3,
   },
-  vehicleImage: {
+  vehicleImg: {
     width: 100,
-    height: 96,
+    height: 90,
+    borderRadius: 18,
   },
-  vehicleInfo: {
+  vehicleDetails: {
     flex: 1,
-    padding: 14,
-    justifyContent: 'space-between',
+    marginLeft: 16,
+    justifyContent: 'center',
   },
-  vehicleTopRow: {
+  vehicleHeaderRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   vehicleName: {
-    fontSize: 15,
+    fontSize: 18,
+    fontWeight: '800',
     color: '#111827',
-    marginBottom: 2,
   },
-  vehiclePlate: {
-    fontSize: 11,
+  vehicleSubText: {
+    fontSize: 13,
     color: '#9ca3af',
+    fontWeight: '600',
+    marginBottom: 8,
   },
-  vehicleStatusRow: {
+  statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    marginTop: 6,
+    gap: 6,
   },
   statusDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
   },
-  vehicleStatus: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.3,
+  statusText: {
+    fontSize: 12,
+    fontWeight: '800',
   },
-
-  // Service history
-  historyCard: {
+  viewAllLink: {
+    color: '#dc2626',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  serviceCard: {
     backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
     elevation: 2,
   },
-  historyName: {
-    fontSize: 14,
-    color: '#111827',
-    marginBottom: 2,
-  },
-  historyVehicle: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginBottom: 3,
-  },
-  historyDateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  historyDate: {
-    fontSize: 11,
-    color: '#9ca3af',
-  },
-  historyRight: {
-    alignItems: 'flex-end',
-    gap: 6,
-  },
-  historyCost: {
-    fontSize: 13,
-    color: '#111827',
-  },
-  completedBadge: {
-    backgroundColor: '#dcfce7',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  completedBadgeText: {
-    color: '#166534',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-
-  // Loyalty card
-  loyaltyCard: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    backgroundColor: '#2563eb',
-    borderRadius: 20,
-    padding: 22,
-    gap: 18,
-    shadowColor: '#2563eb',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  loyaltyHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  loyaltyIconBg: {
-    width: 50,
-    height: 50,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loyaltyTitle: {
-    color: '#fff',
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  loyaltySubtitle: {
-    color: 'rgba(255,255,255,0.75)',
-    fontSize: 12,
-    marginTop: 2,
-  },
-  progressContainer: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 14,
-    padding: 16,
-    gap: 8,
-  },
-  progressHeader: {
+  serviceMain: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  progressLabel: {
-    color: '#fff',
+  serviceName: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  serviceVehicle: {
     fontSize: 13,
+    color: '#6b7280',
+    fontWeight: '600',
+    marginBottom: 8,
   },
-  progressValue: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '700',
+  serviceDateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  progressBar: {
-    height: 8,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 4,
-    overflow: 'hidden',
+  serviceDate: {
+    fontSize: 12,
+    color: '#9ca3af',
+    fontWeight: '500',
   },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#fff',
-    borderRadius: 4,
+  servicePrice: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#111827',
+    marginBottom: 8,
   },
-  progressNote: {
-    color: 'rgba(255,255,255,0.7)',
+  completedBadge: {
+    backgroundColor: '#dcfce7',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+  },
+  completedBadgeText: {
+    color: '#166534',
     fontSize: 11,
+    fontWeight: '800',
   },
-  bottomSpacer: {
-    height: 24,
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#fee2e2',
+    gap: 8,
+  },
+  logoutText: {
+    color: '#dc2626',
+    fontWeight: '700',
+    fontSize: 15,
+  },
+  addCarBtnTextReversed: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  emptyVehicles: {
+    padding: 30,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderStyle: 'dashed',
+  },
+  emptyText: {
+    color: '#9ca3af',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
