@@ -131,7 +131,10 @@ export default function ServicesScreen() {
                     styles.primaryButton,
                     pressed && styles.primaryButtonPressed,
                   ]}
-                  onPress={() => router.push('/appointments')}>
+                  onPress={() => router.push({
+                    pathname: '/booking/create',
+                    params: { serviceType: service.name }
+                  })}>
                   <Text style={styles.primaryButtonText}>Book Now</Text>
                 </Pressable>
               </View>

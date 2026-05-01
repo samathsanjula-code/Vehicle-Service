@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, TextInput, Platform } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useBookings } from '../../hooks/useBookings';
@@ -6,8 +6,9 @@ import { ServiceChip } from '../../components/booking/ServiceChip';
 import { TimeSlotPicker } from '../../components/booking/TimeSlotPicker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
+import { API } from '../../constants/api';
 
-const SERVICES = ['Oil Change', 'Full Service', 'Brake Check', 'Tire Rotation', 'AC Repair', 'Other'];
+type ServiceItem = { _id: string; name: string; price: number; discountPrice?: number; };
 const TIME_SLOTS = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '1:00 PM', '2:00 PM', '3:30 PM', '4:30 PM'];
 
 // Mock vehicles until API is ready
@@ -35,7 +36,22 @@ export default function BookingFormScreen() {
 
   const [scheduledTime, setScheduledTime] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
-  const [otherServiceText, setOtherServiceText] = useState('');
+  
+  const [availableServices, setAvailableServices] = useState<ServiceItem[]>([]);
+  const [loadingServices, setLoadingServices] = useState(true);
+
+  useEffect(() => {
+    fetch(API.services)
+      .then(res => res.json())
+      .then(data => {
+        setAvailableServices(data);
+        setLoadingServices(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoadingServices(false);
+      });
+  }, []);
 
   const toggleService = (s: string) => {
     if (serviceTypes.includes(s)) {
@@ -65,14 +81,21 @@ export default function BookingFormScreen() {
     else router.back();
   };
 
+  const totalAmount = serviceTypes.reduce((total, serviceName) => {
+    const service = availableServices.find(s => s.name === serviceName);
+    if (service) {
+      return total + (service.discountPrice || service.price);
+    }
+    return total;
+  }, 0);
+
   const handleSubmit = async () => {
     if (!vehicleId || serviceTypes.length === 0 || !scheduledDate || !scheduledTime) return;
     try {
-      const finalServices = serviceTypes.map(s => (s === 'Other' && otherServiceText.trim() ? otherServiceText.trim() : s));
       const dateString = scheduledDate.toISOString().split('T')[0];
       const newBooking = await createBooking({
         vehicleId,
-        serviceType: finalServices,
+        serviceType: serviceTypes,
         scheduledDate: dateString,
         scheduledTime,
         notes
@@ -82,9 +105,10 @@ export default function BookingFormScreen() {
         pathname: '/payment',
         params: {
           bookingId: newBooking._id,
-          serviceType: finalServices.join(', '),
+          serviceType: serviceTypes.join(', '),
           scheduledDate: dateString,
-          scheduledTime: newBooking.scheduledTime
+          scheduledTime: newBooking.scheduledTime,
+          totalAmount: totalAmount.toString()
         }
       });
     } catch (err) {
@@ -137,25 +161,18 @@ export default function BookingFormScreen() {
 
             {/* Service Selection */}
             <Text style={[styles.label, { marginTop: 24 }]}>SERVICE TYPE</Text>
-            <View style={styles.grid}>
-              {SERVICES.map((s) => (
-                <ServiceChip
-                  key={s}
-                  label={s}
-                  selected={serviceTypes.includes(s)}
-                  onSelect={() => toggleService(s)}
-                />
-              ))}
-            </View>
-
-            {serviceTypes.includes('Other') && (
-              <View style={{ marginTop: 12 }}>
-                <TextInput
-                  style={[styles.textArea, { minHeight: 50 }]}
-                  placeholder="Enter the service you want..."
-                  value={otherServiceText}
-                  onChangeText={setOtherServiceText}
-                />
+            {loadingServices ? (
+              <Text style={{ color: '#666' }}>Loading services...</Text>
+            ) : (
+              <View style={styles.grid}>
+                {availableServices.map((s) => (
+                  <ServiceChip
+                    key={s._id}
+                    label={s.name}
+                    selected={serviceTypes.includes(s.name)}
+                    onSelect={() => toggleService(s.name)}
+                  />
+                ))}
               </View>
             )}
 
@@ -221,7 +238,10 @@ export default function BookingFormScreen() {
               </Text>
 
               <Text style={styles.summaryLabel}>Services</Text>
-              <Text style={styles.summaryValue}>{serviceTypes.map(s => s === 'Other' && otherServiceText ? otherServiceText : s).join(', ')}</Text>
+              <Text style={styles.summaryValue}>{serviceTypes.join(', ')}</Text>
+              
+              <Text style={styles.summaryLabel}>Total Amount</Text>
+              <Text style={styles.summaryValue}>LKR {totalAmount.toFixed(2)}</Text>
               
               <Text style={styles.summaryLabel}>Date</Text>
               <Text style={styles.summaryValue}>{scheduledDate.toDateString()}</Text>
