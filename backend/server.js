@@ -18,7 +18,11 @@ app.use(express.urlencoded({ extended: true }));
 const bookingRoutes = require('./routes/bookingRoutes');
 
 app.use('/api/auth', authRoutes);
+<<<<<<< HEAD
 app.use('/api/bookings', bookingRoutes);
+=======
+app.use('/api/services', require('./routes/services'));
+>>>>>>> Booking-and-Sheduling/feature/service-management
 
 // Health check
 app.get('/', (req, res) => {
