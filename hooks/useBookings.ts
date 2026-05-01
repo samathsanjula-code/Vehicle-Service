@@ -10,7 +10,7 @@ export interface Booking {
   serviceType: string[];
   scheduledDate: string;
   scheduledTime: string;
-  status: 'Pending' | 'Confirmed' | 'Completed' | 'Cancelled';
+  status: 'Pending' | 'Pending Payment' | 'Confirmed' | 'Completed' | 'Cancelled';
   notes?: string;
   createdAt: string;
 }

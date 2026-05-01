@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { ScrollView, View, Text, Pressable, StyleSheet, useWindowDimensions, TextInput } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
+import React, { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { API } from '../../constants/api';
 
 // --- DATA TYPE ---
@@ -12,6 +12,7 @@ type ServiceItem = {
   name: string;
   description: string;
   price: number;
+  discountPrice?: number;
   features: string[];
   category: string;
 };

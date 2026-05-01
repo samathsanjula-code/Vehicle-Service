@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ScrollView, View, Text, Pressable, Linking, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { ThemedText } from '@/components/themed-text';
@@ -14,6 +14,7 @@ import { useBookings, Booking } from '@/hooks/useBookings';
 const STATUS_STYLE: Record<string, { bg: string; text: string }> = {
   Confirmed: { bg: '#dcfce7', text: '#166534' },
   Pending: { bg: '#fef9c3', text: '#854d0e' },
+  'Pending Payment': { bg: '#fef3c7', text: '#d97706' },
   Completed: { bg: '#f3f4f6', text: '#374151' },
   Cancelled: { bg: '#fce8e6', text: '#d93025' },
 };
@@ -21,12 +22,14 @@ const STATUS_STYLE: Record<string, { bg: string; text: string }> = {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function AppointmentsScreen() {
-  const { fetchUserBookings, loading, error } = useBookings();
+  const { fetchUserBookings, deleteBooking, loading, error } = useBookings();
   const [upcomingAppointments, setUpcomingAppointments] = useState<Booking[]>([]);
 
-  useEffect(() => {
-    loadBookings();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadBookings();
+    }, [])
+  );
 
   const loadBookings = async () => {
     try {
@@ -49,6 +52,28 @@ export default function AppointmentsScreen() {
 
   const handleNewAppointment = () => {
     router.push('/booking/create');
+  };
+
+  const handleDelete = (id: string) => {
+    Alert.alert(
+      'Delete Appointment',
+      'Are you sure you want to delete this appointment?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteBooking(id);
+              loadBookings();
+            } catch (err) {
+              Alert.alert('Error', 'Failed to delete appointment');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const handleViewDetails = (item: Booking) => {
@@ -129,13 +154,26 @@ export default function AppointmentsScreen() {
                       <Text style={styles.actionBtnPrimaryText}>View Details</Text>
                     </Pressable>
                     
-                    {appt.status !== 'Cancelled' && appt.status !== 'Completed' && (
+                    {appt.status === 'Pending' ? (
+                      <>
+                        <Pressable
+                          style={({ pressed }) => [styles.actionBtnSecondary, pressed && { opacity: 0.85 }]}
+                          onPress={() => router.push({ pathname: '/booking/create', params: { editBookingId: appt._id } })}>
+                          <Text style={styles.actionBtnSecondaryText}>Edit</Text>
+                        </Pressable>
+                        <Pressable
+                          style={({ pressed }) => [styles.actionBtnDanger, pressed && { opacity: 0.85 }]}
+                          onPress={() => handleDelete(appt._id)}>
+                          <Text style={styles.actionBtnDangerText}>Delete</Text>
+                        </Pressable>
+                      </>
+                    ) : appt.status !== 'Cancelled' && appt.status !== 'Completed' ? (
                       <Pressable
                         style={({ pressed }) => [styles.actionBtnSecondary, pressed && { opacity: 0.85 }]}
                         onPress={() => handleReschedule(appt)}>
                         <Text style={styles.actionBtnSecondaryText}>Reschedule</Text>
                       </Pressable>
-                    )}
+                    ) : null}
                   </View>
                 </View>
               );
@@ -288,6 +326,20 @@ const styles = StyleSheet.create({
   },
   actionBtnSecondaryText: {
     color: '#374151',
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  actionBtnDanger: {
+    flex: 1,
+    borderWidth: 1.5,
+    borderColor: '#fecaca',
+    backgroundColor: '#fef2f2',
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  actionBtnDangerText: {
+    color: '#dc2626',
     fontWeight: '600',
     fontSize: 13,
   },

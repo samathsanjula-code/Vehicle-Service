@@ -76,16 +76,46 @@ export default function BookingDetailScreen() {
         <Text style={styles.value}>{booking._id}</Text>
       </View>
 
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.btnOutline} onPress={() => router.back()}>
-          <Text style={styles.btnOutlineText}>Back</Text>
-        </TouchableOpacity>
-        
-        {booking.status !== 'Cancelled' && booking.status !== 'Completed' && (
-          <TouchableOpacity style={styles.btnDanger} onPress={handleCancel}>
-            <Text style={styles.btnDangerText}>Cancel Appointment</Text>
+      <View style={{ gap: 12, marginTop: 'auto', paddingTop: 16 }}>
+        {booking.status === 'Pending Payment' && (
+          <TouchableOpacity 
+            style={[styles.btnPrimary, { width: '100%' }]} 
+            onPress={() => router.push({
+              pathname: '/payment',
+              params: {
+                bookingId: booking._id,
+                serviceType: Array.isArray(booking.serviceType) ? booking.serviceType.join(', ') : booking.serviceType,
+                scheduledDate: booking.scheduledDate,
+                scheduledTime: booking.scheduledTime
+              }
+            })}
+          >
+            <Text style={styles.btnPrimaryText}>Pay Now</Text>
           </TouchableOpacity>
         )}
+        
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <TouchableOpacity style={styles.btnOutline} onPress={() => router.back()}>
+            <Text style={styles.btnOutlineText}>Back</Text>
+          </TouchableOpacity>
+
+          {booking.status === 'Pending Payment' && (
+            <TouchableOpacity 
+              style={[styles.btnOutline, { flex: 2 }]} 
+              onPress={() => router.push({ pathname: '/booking/create', params: { editBookingId: booking._id } })}
+            >
+              <Text style={styles.btnOutlineText}>Edit</Text>
+            </TouchableOpacity>
+          )}
+          
+          {booking.status !== 'Cancelled' && booking.status !== 'Completed' && (
+            <TouchableOpacity style={styles.btnDanger} onPress={handleCancel}>
+              <Text style={styles.btnDangerText}>
+                {booking.status === 'Pending Payment' ? 'Delete' : 'Cancel'}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -102,6 +132,8 @@ const styles = StyleSheet.create({
   footer: { flexDirection: 'row', gap: 12, marginTop: 'auto', paddingTop: 16 },
   btnOutline: { flex: 1, borderWidth: 1, borderColor: '#e0e0e0', backgroundColor: '#fff', paddingVertical: 14, borderRadius: 8, alignItems: 'center' },
   btnOutlineText: { color: '#0d0d0f', fontWeight: 'bold', fontSize: 16 },
+  btnPrimary: { backgroundColor: '#166534', paddingVertical: 14, borderRadius: 8, alignItems: 'center' },
+  btnPrimaryText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
   btnDanger: { flex: 2, backgroundColor: '#c0392b', paddingVertical: 14, borderRadius: 8, alignItems: 'center' },
   btnDangerText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
 });

@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, TextInput, Platform } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useBookings } from '../../hooks/useBookings';
+import { useEffect, useState } from 'react';
+import { Alert, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { ServiceChip } from '../../components/booking/ServiceChip';
 import { TimeSlotPicker } from '../../components/booking/TimeSlotPicker';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { Ionicons } from '@expo/vector-icons';
 import { API } from '../../constants/api';
+import { useBookings } from '../../hooks/useBookings';
 
 type ServiceItem = { _id: string; name: string; price: number; discountPrice?: number; };
 const TIME_SLOTS = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '1:00 PM', '2:00 PM', '3:30 PM', '4:30 PM'];
@@ -19,7 +19,8 @@ const MOCK_VEHICLES = [
 
 export default function BookingFormScreen() {
   const params = useLocalSearchParams();
-  const { createBooking, loading } = useBookings();
+  const { createBooking, updateBooking, fetchBookingById, loading } = useBookings();
+  const isEditMode = !!params.editBookingId;
   
   const [step, setStep] = useState(1);
   const [vehicleId, setVehicleId] = useState(''); 
@@ -51,7 +52,17 @@ export default function BookingFormScreen() {
         console.error(err);
         setLoadingServices(false);
       });
-  }, []);
+
+    if (isEditMode) {
+      fetchBookingById(params.editBookingId as string).then(booking => {
+        setVehicleId(booking.vehicleId._id || booking.vehicleId);
+        setServiceTypes(booking.serviceType);
+        setScheduledDate(new Date(booking.scheduledDate));
+        setScheduledTime(booking.scheduledTime);
+        setNotes(booking.notes || '');
+      }).catch(err => console.error(err));
+    }
+  }, [params.editBookingId]);
 
   const toggleService = (s: string) => {
     if (serviceTypes.includes(s)) {
@@ -89,30 +100,44 @@ export default function BookingFormScreen() {
     return total;
   }, 0);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (payNow: boolean) => {
     if (!vehicleId || serviceTypes.length === 0 || !scheduledDate || !scheduledTime) return;
     try {
       const dateString = scheduledDate.toISOString().split('T')[0];
-      const newBooking = await createBooking({
+      const payload = {
         vehicleId,
         serviceType: serviceTypes,
         scheduledDate: dateString,
         scheduledTime,
-        notes
-      });
-      Alert.alert('Success', 'Booking created successfully!');
-      router.push({
-        pathname: '/payment',
-        params: {
-          bookingId: newBooking._id,
-          serviceType: serviceTypes.join(', '),
-          scheduledDate: dateString,
-          scheduledTime: newBooking.scheduledTime,
-          totalAmount: totalAmount.toString()
-        }
-      });
-    } catch (err) {
-      // Error handled in hook
+        notes,
+        status: 'Pending'
+      };
+
+      let bookingId = params.editBookingId as string;
+      if (isEditMode) {
+        await updateBooking(bookingId, payload);
+      } else {
+        const newBooking = await createBooking(payload);
+        bookingId = newBooking._id;
+      }
+      
+      if (payNow) {
+        router.push({
+          pathname: '/payment',
+          params: {
+            bookingId,
+            serviceType: serviceTypes.join(', '),
+            scheduledDate: dateString,
+            scheduledTime,
+            totalAmount: totalAmount.toString()
+          }
+        });
+      } else {
+        Alert.alert('Success', 'Booking saved! Payment is pending.');
+        router.push('/(tabs)/appointments');
+      }
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to save booking');
     }
   };
 
@@ -261,18 +286,23 @@ export default function BookingFormScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.btnOutline} onPress={handleBack}>
-          <Text style={styles.btnOutlineText}>Back</Text>
+        <TouchableOpacity style={styles.btnBack} onPress={handleBack}>
+          <Text style={styles.btnBackText}>Back</Text>
         </TouchableOpacity>
         
         {step < 2 ? (
           <TouchableOpacity style={styles.btnPrimary} onPress={handleNext}>
-            <Text style={styles.btnPrimaryText}>Continue to Payment</Text>
+            <Text style={styles.btnPrimaryText}>Continue to Review</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={[styles.btnPrimary, loading && { opacity: 0.7 }]} onPress={handleSubmit} disabled={loading}>
-            <Text style={styles.btnPrimaryText}>{loading ? 'Saving...' : 'Confirm & Pay'}</Text>
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity style={[styles.btnOutline, loading && { opacity: 0.7 }]} onPress={() => handleSubmit(false)} disabled={loading}>
+              <Text style={styles.btnOutlineText}>{loading ? 'Saving...' : 'Pay Later'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.btnPrimary, loading && { opacity: 0.7 }]} onPress={() => handleSubmit(true)} disabled={loading}>
+              <Text style={styles.btnPrimaryText}>{loading ? 'Saving...' : 'Pay Now'}</Text>
+            </TouchableOpacity>
+          </>
         )}
       </View>
     </View>
@@ -306,15 +336,26 @@ const styles = StyleSheet.create({
   dateInputBox: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 2, borderColor: '#5e4b8b', borderRadius: 4, paddingVertical: 12, paddingHorizontal: 16, backgroundColor: '#fff' },
   dateInputText: { fontSize: 16, color: '#333' },
   dateIconWrapper: { backgroundColor: '#e0e0e0', padding: 6, borderRadius: 20 },
-  
+  textArea: {
+    width: '100%',
+    minHeight: 110,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    padding: 14,
+    fontSize: 16,
+    color: '#333',
+  },
   summaryCard: { backgroundColor: '#f9f9f9', padding: 20, borderRadius: 12, borderWidth: 1, borderColor: '#e0e0e0' },
   summaryLabel: { fontSize: 14, color: '#7f8c8d', marginBottom: 4, marginTop: 12 },
   summaryValue: { fontSize: 18, fontWeight: 'bold', color: '#0d0d0f' },
   
-  textArea: { backgroundColor: '#f9f9f9', borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 8, padding: 16, fontSize: 16, minHeight: 100 },
-  footer: { flexDirection: 'row', gap: 12, marginTop: 'auto', paddingTop: 16 },
-  btnPrimary: { flex: 2, backgroundColor: '#c0392b', paddingVertical: 14, borderRadius: 8, alignItems: 'center' },
-  btnPrimaryText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  btnOutline: { flex: 1, borderWidth: 1, borderColor: '#e0e0e0', backgroundColor: '#fff', paddingVertical: 14, borderRadius: 8, alignItems: 'center' },
-  btnOutlineText: { color: '#0d0d0f', fontWeight: 'bold', fontSize: 16 },
+  footer: { flexDirection: 'row', gap: 8, marginTop: 'auto', paddingTop: 16 },
+  btnPrimary: { flex: 1.8, backgroundColor: '#c0392b', paddingVertical: 14, borderRadius: 8, alignItems: 'center' },
+  btnPrimaryText: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
+  btnOutline: { flex: 1.1, borderWidth: 1, borderColor: '#e0e0e0', backgroundColor: '#fff', paddingVertical: 14, borderRadius: 8, alignItems: 'center' },
+  btnOutlineText: { color: '#0d0d0f', fontWeight: 'bold', fontSize: 14 },
+  btnBack: { flex: 0.9, borderWidth: 1, borderColor: '#e0e0e0', backgroundColor: '#fff', paddingVertical: 14, borderRadius: 8, alignItems: 'center' },
+  btnBackText: { color: '#0d0d0f', fontWeight: 'bold', fontSize: 14 },
 });
