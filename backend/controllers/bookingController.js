@@ -56,7 +56,8 @@ exports.getBookingById = async (req, res) => {
     }
     
     // Check if user is authorized to view this booking
-    if (booking.customerId._id.toString() !== req.user.id && !req.user.isAdmin) {
+    const bookingCustomerId = booking.customerId._id ? booking.customerId._id.toString() : booking.customerId.toString();
+    if (bookingCustomerId !== req.user.id && !req.user.isAdmin) {
       return res.status(403).json({ message: 'Not authorized to view this booking' });
     }
     
@@ -94,7 +95,8 @@ exports.updateBooking = async (req, res) => {
       return res.status(404).json({ message: 'Booking not found' });
     }
     
-    if (booking.customerId.toString() !== req.user.id && !req.user.isAdmin) {
+    const bookingCustomerId = booking.customerId._id ? booking.customerId._id.toString() : booking.customerId.toString();
+    if (bookingCustomerId !== req.user.id && !req.user.isAdmin) {
       return res.status(403).json({ message: 'Not authorized to update this booking' });
     }
     
@@ -120,7 +122,8 @@ exports.deleteBooking = async (req, res) => {
       return res.status(404).json({ message: 'Booking not found' });
     }
     
-    if (booking.customerId.toString() !== req.user.id && !req.user.isAdmin) {
+    const bookingCustomerId = booking.customerId._id ? booking.customerId._id.toString() : booking.customerId.toString();
+    if (bookingCustomerId !== req.user.id && !req.user.isAdmin) {
       return res.status(403).json({ message: 'Not authorized to delete this booking' });
     }
     
