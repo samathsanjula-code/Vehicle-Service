@@ -45,7 +45,10 @@ export default function ServiceHistoryScreen() {
   const router = useRouter();
 
   const fetchRecords = async () => {
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const response = await fetch(API.vehicles, {
@@ -159,13 +162,17 @@ export default function ServiceHistoryScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="arrow-back" size={24} color="#111" />
         </Pressable>
         <Text style={styles.headerTitle}>Vehicle Fleet</Text>
-        <View style={{ width: 24 }} />
+        <Pressable 
+          onPress={() => router.push('/add-vehicle')}
+          style={styles.addIconBtn}>
+          <Ionicons name="add-circle" size={28} color="#dc2626" />
+        </Pressable>
       </View>
 
       {loading ? (
@@ -195,26 +202,41 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
   },
   header: {
-    backgroundColor: '#dc2626',
+    backgroundColor: '#fff',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
   },
   backBtn: {
-    padding: 4,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f8fafc',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addIconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#fef2f2',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
-    color: '#fff',
+    color: '#111',
     fontSize: 20,
     fontWeight: '800',
+    letterSpacing: -0.5,
   },
   listContent: {
     padding: 16,
     gap: 16,
+    paddingBottom: 40,
   },
   card: {
     backgroundColor: '#fff',
