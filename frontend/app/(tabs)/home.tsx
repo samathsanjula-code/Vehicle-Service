@@ -242,34 +242,6 @@ export default function HomeScreen() {
             </View>
           </Animated.View>
 
-          {/* ── Vehicle Management ───────────────────────────────────────────── */}
-          <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.section}>
-            <Text style={styles.sectionTitle}>Vehicle Management</Text>
-            <View style={styles.vehicleManagementRow}>
-              <Pressable 
-                style={({ pressed }) => [styles.vehicleActionCard, pressed && { transform: [{ scale: 0.98 }], opacity: 0.9 }]}
-                onPress={() => router.push('/add-vehicle')}>
-                <View style={[styles.vehicleIconBg, { backgroundColor: '#eff6ff' }]}>
-                  <Ionicons name="add-circle" size={28} color="#2563eb" />
-                </View>
-                <View style={styles.vehicleTextContainer}>
-                  <Text style={styles.vehicleActionText}>Add Vehicle</Text>
-                  <Text style={styles.vehicleActionSub}>Register new car</Text>
-                </View>
-              </Pressable>
-              
-              <Pressable 
-                style={({ pressed }) => [styles.vehicleActionCard, pressed && { transform: [{ scale: 0.98 }], opacity: 0.9 }]}
-                onPress={() => router.push('/service-history')}>
-                <View style={[styles.vehicleIconBg, { backgroundColor: '#f0fdf4' }]}>
-                  <Ionicons name="car-sport" size={28} color="#16a34a" />
-                </View>
-                <View style={styles.vehicleTextContainer}>
-                  <Text style={styles.vehicleActionText}>My Fleet</Text>
-                  <Text style={styles.vehicleActionSub}>View all vehicles</Text>
-                </View>
-              </Pressable>
-            </View>
           </Animated.View>
 
           {/* ── Core Services (Horizontal Scroll) ─────────────────────────── */}
@@ -624,49 +596,6 @@ const styles = StyleSheet.create({
     color: '#dc2626',
     fontWeight: '700',
     fontSize: 14,
-  },
-
-  // Vehicle Management Styles
-  vehicleManagementRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 24,
-    gap: 16,
-  },
-  vehicleActionCard: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
-  },
-  vehicleIconBg: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  vehicleTextContainer: {
-    flex: 1,
-  },
-  vehicleActionText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#111',
-  },
-  vehicleActionSub: {
-    fontSize: 11,
-    color: '#666',
-    fontWeight: '500',
   },
 
   // Horizontal Scroll Cards

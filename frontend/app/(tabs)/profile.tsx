@@ -6,51 +6,27 @@ import {
   Pressable,
   StyleSheet,
   Alert,
+  Dimensions,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState, useCallback } from 'react';
-
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { vehicleImages } from '@/assets/images';
-import { API } from '../../constants/api';
+import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
+import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// ─── Data ────────────────────────────────────────────────────────────────────
-
-type Vehicle = {
-  id: number;
-  name: string;
-  plate: string;
-  image: ReturnType<typeof require>;
-  status: string;
-  statusColor: string;
-  statusDot: string;
-  healthy: boolean;
-};
-
-type ServiceRecord = {
-  id: number;
-  service: string;
-  date: string;
-  vehicle: string;
-  cost: string;
-  status: string;
-};
-
-const vehicles: Vehicle[] = [];
-const serviceHistory: ServiceRecord[] = [];
-
-// ─── Component ───────────────────────────────────────────────────────────────
-
-import { Redirect, useRouter, useFocusEffect } from 'expo-router';
+import { ThemedText } from '@/components/themed-text';
+import { API } from '../../constants/api';
 import { useAuth } from '../../context/AuthContext';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [loyaltyPoints, setLoyaltyPoints] = useState(user?.loyaltyPoints || 0);
+  const [loading, setLoading] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -77,10 +53,6 @@ export default function ProfileScreen() {
       console.error(err);
     }
   };
-  
-  const handleAddCar = () => {
-    Alert.alert('Add Vehicle', 'This feature is coming soon!');
-  };
 
   const handleEditProfile = () => {
     Alert.alert('Edit Profile', 'Profile editing coming soon!');
@@ -88,168 +60,137 @@ export default function ProfileScreen() {
 
   if (!user) {
     return (
-      <SafeAreaView style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Ionicons name="lock-closed" size={48} color="#9ca3af" style={{ marginBottom: 16 }} />
-        <ThemedText type="subtitle" style={{ marginBottom: 8, color: '#1f2937' }}>Authentication Required</ThemedText>
-        <ThemedText style={{ marginBottom: 24, color: '#6b7280' }}>Please log in to view your profile.</ThemedText>
-        <Pressable
-          style={({ pressed }) => [styles.addCarBtn, pressed && { opacity: 0.85 }]}
-          onPress={() => router.push('/(auth)/login')}>
-          <Text style={styles.addCarBtnText}>Log In Now</Text>
-        </Pressable>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.authRequiredContainer}>
+          <View style={styles.lockIconCircle}>
+            <Ionicons name="lock-closed" size={40} color="#dc2626" />
+          </View>
+          <Text style={styles.authTitle}>Authentication Required</Text>
+          <Text style={styles.authSubtitle}>Please log in to access your personal garage and profile details.</Text>
+          <Pressable
+            style={({ pressed }) => [styles.loginBtn, pressed && { opacity: 0.85 }]}
+            onPress={() => router.push('/(auth)/login')}>
+            <Text style={styles.loginBtnText}>Log In to Account</Text>
+          </Pressable>
+        </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-
-        {/* ── Profile Header ─────────────────────────────────────────────── */}
-        <View style={styles.profileHeader}>
-          <View style={styles.avatarWrapper}>
-            <View style={styles.avatarCircle}>
-              <Text style={styles.avatarInitials}>{user.fullName ? user.fullName[0].toUpperCase() : 'U'}</Text>
-            </View>
-            <Pressable style={styles.editAvatarBtn} onPress={handleEditProfile}>
-              <Ionicons name="pencil" size={12} color="#fff" />
-            </Pressable>
-          </View>
-          <ThemedText type="subtitle" style={styles.profileName}>{user.fullName}</ThemedText>
-          <ThemedText style={styles.profileMeta}>{user.email}</ThemedText>
-          <Pressable onPress={logout} style={{ marginTop: 10 }}>
-             <Text style={{ color: '#dc2626', fontWeight: 'bold' }}>Logout</Text>
-          </Pressable>
-        </View>
-
-        {/* ── Stats Row (Dynamic zero) ─────────────────────────────────────── */}
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <View style={[styles.statIconBox, { backgroundColor: '#fef2f2' }]}>
-              <Ionicons name="time" size={20} color="#dc2626" />
-            </View>
-            <ThemedText style={styles.statLabel}>Service History</ThemedText>
-            <ThemedText type="defaultSemiBold" style={styles.statValue}>0 Records</ThemedText>
-            <Pressable>
-              <Text style={styles.statLink}>View All →</Text>
-            </Pressable>
-          </View>
-          <View style={styles.statCard}>
-            <View style={[styles.statIconBox, { backgroundColor: '#eff6ff' }]}>
-              <Ionicons name="star" size={20} color="#2563eb" />
-            </View>
-            <ThemedText style={styles.statLabel}>Loyalty Points</ThemedText>
-            <ThemedText type="defaultSemiBold" style={styles.statValue}>{loyaltyPoints} pts</ThemedText>
-            <Text style={[styles.statLink, { color: '#2563eb' }]}>
-              {loyaltyPoints >= 1000 ? 'Silver Member' : 'New Member'}
-            </Text>
-          </View>
-        </View>
-
-        {/* ── My Vehicles ────────────────────────────────────────────────── */}
-        <ThemedView style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <ThemedText type="subtitle" style={styles.sectionTitle}>My Vehicles</ThemedText>
-            <Pressable
-              style={({ pressed }) => [styles.addCarBtn, pressed && { opacity: 0.85 }]}
-              onPress={handleAddCar}>
-              <Ionicons name="add" size={16} color="#fff" />
-              <Text style={styles.addCarBtnText}>Add Car</Text>
-            </Pressable>
-          </View>
-          <ThemedText style={styles.sectionSubtitle}>Registered for precision service</ThemedText>
-
-          {vehicles.map((vehicle) => (
-            <View key={vehicle.id} style={styles.vehicleCard}>
-              <Image
-                source={vehicle.image}
-                style={styles.vehicleImage}
-                contentFit="cover"
-                transition={300}
-              />
-              <View style={styles.vehicleInfo}>
-                <View style={styles.vehicleTopRow}>
-                  <View style={{ flex: 1 }}>
-                    <ThemedText type="defaultSemiBold" style={styles.vehicleName}>
-                      {vehicle.name}
-                    </ThemedText>
-                    <ThemedText style={styles.vehiclePlate}>{vehicle.plate}</ThemedText>
-                  </View>
-                  <Pressable onPress={() => Alert.alert('Options', `Manage ${vehicle.name}`)}>
-                    <Ionicons name="ellipsis-vertical" size={18} color="#9ca3af" />
-                  </Pressable>
-                </View>
-                <View style={styles.vehicleStatusRow}>
-                  <View style={[styles.statusDot, { backgroundColor: vehicle.statusDot }]} />
-                  <Text style={[styles.vehicleStatus, { color: vehicle.statusColor }]}>
-                    {vehicle.status}
-                  </Text>
-                </View>
+        
+        {/* --- PROFILE HEADER --- */}
+        <Animated.View entering={FadeInDown.duration(800)} style={styles.headerContainer}>
+          <View style={styles.avatarContainer}>
+            <View style={styles.avatarBorder}>
+              <View style={styles.avatarCircle}>
+                <Text style={styles.avatarText}>
+                  {user.fullName ? user.fullName[0].toUpperCase() : 'U'}
+                </Text>
               </View>
             </View>
-          ))}
-        </ThemedView>
-
-        {/* ── Recent Services ────────────────────────────────────────────── */}
-        <ThemedView style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <ThemedText type="subtitle" style={styles.sectionTitle}>Recent Services</ThemedText>
-            <Pressable>
-              <Text style={styles.statLink}>View All</Text>
+            <Pressable style={styles.editBadge} onPress={handleEditProfile}>
+              <Ionicons name="camera" size={14} color="#fff" />
             </Pressable>
           </View>
-
-          {serviceHistory.map((record) => (
-            <View key={record.id} style={styles.historyCard}>
-              <View style={{ flex: 1 }}>
-                <ThemedText type="defaultSemiBold" style={styles.historyName}>
-                  {record.service}
-                </ThemedText>
-                <ThemedText style={styles.historyVehicle}>{record.vehicle}</ThemedText>
-                <View style={styles.historyDateRow}>
-                  <Ionicons name="time-outline" size={12} color="#9ca3af" />
-                  <ThemedText style={styles.historyDate}>{record.date}</ThemedText>
-                </View>
-              </View>
-              <View style={styles.historyRight}>
-                <ThemedText type="defaultSemiBold" style={styles.historyCost}>
-                  {record.cost}
-                </ThemedText>
-                <View style={styles.completedBadge}>
-                  <Text style={styles.completedBadgeText}>{record.status}</Text>
-                </View>
-              </View>
-            </View>
-          ))}
-        </ThemedView>
-
-        {/* ── Loyalty Card ───────────────────────────────────────────────── */}
-        <View style={styles.loyaltyCard}>
-          <View style={styles.loyaltyHeader}>
-            <View style={styles.loyaltyIconBg}>
-              <Ionicons name="trophy" size={24} color="#fff" />
-            </View>
-            <View>
-              <Text style={styles.loyaltyTitle}>
-                {loyaltyPoints >= 1000 ? 'Silver Tier Member' : 'Starter Tier Member'}
+          
+          <Text style={styles.userName}>{user.fullName}</Text>
+          <Text style={styles.userEmail}>{user.email.toLowerCase()}</Text>
+          
+          <View style={styles.badgeRow}>
+            <View style={styles.membershipBadge}>
+              <Ionicons name="shield-checkmark" size={14} color="#dc2626" />
+              <Text style={styles.membershipText}>
+                {loyaltyPoints >= 1000 ? 'GOLD MEMBER' : 'PREMIUM USER'}
               </Text>
-              <Text style={styles.loyaltySubtitle}>Exclusive benefits & rewards</Text>
             </View>
           </View>
-          <View style={styles.progressContainer}>
-            <View style={styles.progressHeader}>
-              <Text style={styles.progressLabel}>Points Progress</Text>
-              <Text style={styles.progressValue}>{loyaltyPoints} / 1,000</Text>
+        </Animated.View>
+
+        {/* --- QUICK ACTIONS / GARAGE --- */}
+        <View style={styles.contentPadding}>
+          <Animated.View entering={FadeInDown.delay(200).duration(800)}>
+            <Text style={styles.sectionTitle}>My Garage</Text>
+            <View style={styles.garageRow}>
+              <Pressable 
+                style={({ pressed }) => [styles.garageCard, pressed && styles.cardPressed]}
+                onPress={() => router.push('/add-vehicle')}>
+                <View style={[styles.iconBg, { backgroundColor: '#eff6ff' }]}>
+                  <Ionicons name="add-circle" size={28} color="#2563eb" />
+                </View>
+                <Text style={styles.cardTitle}>Add Vehicle</Text>
+                <Text style={styles.cardSub}>New registration</Text>
+              </Pressable>
+
+              <Pressable 
+                style={({ pressed }) => [styles.garageCard, pressed && styles.cardPressed]}
+                onPress={() => router.push('/service-history')}>
+                <View style={[styles.iconBg, { backgroundColor: '#f0fdf4' }]}>
+                  <Ionicons name="car-sport" size={28} color="#16a34a" />
+                </View>
+                <Text style={styles.cardTitle}>My Fleet</Text>
+                <Text style={styles.cardSub}>Manage cars</Text>
+              </Pressable>
             </View>
-            <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: `${Math.min((loyaltyPoints / 1000) * 100, 100)}%` }]} />
+          </Animated.View>
+
+          {/* --- LOYALTY CARD --- */}
+          <Animated.View entering={FadeInDown.delay(400).duration(800)} style={styles.loyaltySection}>
+            <View style={styles.loyaltyCard}>
+              <View style={styles.loyaltyHeader}>
+                <Ionicons name="trophy" size={24} color="#fff" />
+                <View>
+                  <Text style={styles.loyaltyTitle}>Loyalty Rewards</Text>
+                  <Text style={styles.loyaltyPoints}>{loyaltyPoints} Points Collected</Text>
+                </View>
+              </View>
+              <View style={styles.progressBarBg}>
+                <View style={[styles.progressBarFill, { width: `${Math.min((loyaltyPoints / 1000) * 100, 100)}%` }]} />
+              </View>
+              <Text style={styles.loyaltyNote}>
+                {loyaltyPoints >= 1000 ? "You're a top-tier member!" : `${1000 - loyaltyPoints} more points to Gold status`}
+              </Text>
             </View>
-            <Text style={styles.progressNote}>
-              {loyaltyPoints >= 1000 
-                ? 'You have reached Silver tier!' 
-                : `${1000 - loyaltyPoints} points to Silver tier`}
-            </Text>
-          </View>
+          </Animated.View>
+
+          {/* --- SETTINGS LIST --- */}
+          <Animated.View entering={FadeInDown.delay(600).duration(800)} style={styles.settingsSection}>
+            <Text style={styles.sectionTitle}>Account Settings</Text>
+            
+            <Pressable style={styles.settingsItem}>
+              <View style={[styles.settingIcon, { backgroundColor: '#f3f4f6' }]}>
+                <Ionicons name="person-outline" size={20} color="#374151" />
+              </View>
+              <Text style={styles.settingText}>Personal Information</Text>
+              <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
+            </Pressable>
+
+            <Pressable style={styles.settingsItem}>
+              <View style={[styles.settingIcon, { backgroundColor: '#f3f4f6' }]}>
+                <Ionicons name="notifications-outline" size={20} color="#374151" />
+              </View>
+              <Text style={styles.settingText}>Notification Preferences</Text>
+              <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
+            </Pressable>
+
+            <Pressable style={styles.settingsItem} onPress={() => router.push('/appointments')}>
+              <View style={[styles.settingIcon, { backgroundColor: '#f3f4f6' }]}>
+                <Ionicons name="calendar-outline" size={20} color="#374151" />
+              </View>
+              <Text style={styles.settingText}>My Appointments</Text>
+              <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
+            </Pressable>
+
+            <Pressable style={[styles.settingsItem, { borderBottomWidth: 0 }]} onPress={logout}>
+              <View style={[styles.settingIcon, { backgroundColor: '#fef2f2' }]}>
+                <Ionicons name="log-out-outline" size={20} color="#dc2626" />
+              </View>
+              <Text style={[styles.settingText, { color: '#dc2626' }]}>Sign Out</Text>
+              <Ionicons name="chevron-forward" size={18} color="#dc2626" />
+            </Pressable>
+          </Animated.View>
         </View>
 
         <View style={styles.bottomSpacer} />
@@ -258,336 +199,268 @@ export default function ProfileScreen() {
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#fff',
   },
   scrollView: {
     flex: 1,
   },
-
-  // Profile header
-  profileHeader: {
-    backgroundColor: '#fff',
+  authRequiredContainer: {
+    padding: 40,
     alignItems: 'center',
-    paddingTop: 32,
-    paddingBottom: 28,
-    paddingHorizontal: 24,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    justifyContent: 'center',
+    flex: 1,
   },
-  avatarWrapper: {
+  lockIconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#fef2f2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  authTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#111',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  authSubtitle: {
+    fontSize: 15,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 32,
+  },
+  loginBtn: {
+    backgroundColor: '#dc2626',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 16,
+    width: '100%',
+    alignItems: 'center',
+  },
+  loginBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+
+  // Header
+  headerContainer: {
+    alignItems: 'center',
+    paddingTop: 40,
+    paddingBottom: 30,
+    backgroundColor: '#fff',
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 20,
+    elevation: 5,
+  },
+  avatarContainer: {
     position: 'relative',
-    marginBottom: 16,
+    marginBottom: 20,
+  },
+  avatarBorder: {
+    padding: 4,
+    borderRadius: 44,
+    borderWidth: 2,
+    borderColor: '#dc2626',
+    borderStyle: 'dashed',
   },
   avatarCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 22,
-    backgroundColor: '#dc2626',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#111',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarInitials: {
+  avatarText: {
     color: '#fff',
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: '900',
-    letterSpacing: 2,
   },
-  editAvatarBtn: {
+  editBadge: {
     position: 'absolute',
-    bottom: -4,
-    right: -4,
+    bottom: 0,
+    right: 0,
     backgroundColor: '#dc2626',
     width: 28,
     height: 28,
-    borderRadius: 8,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: '#fff',
   },
-  profileName: {
-    color: '#111827',
-    fontSize: 22,
+  userName: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#111',
     marginBottom: 4,
   },
-  profileMeta: {
-    color: '#9ca3af',
-    fontSize: 11,
-    letterSpacing: 1.5,
-    fontWeight: '600',
+  userEmail: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16,
   },
-
-  // Stats
-  statsRow: {
+  badgeRow: {
     flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    gap: 8,
   },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    gap: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  statIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+  membershipBadge: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
+    gap: 6,
+    backgroundColor: '#fef2f2',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(220, 38, 38, 0.1)',
   },
-  statLabel: {
+  membershipText: {
     fontSize: 10,
-    color: '#9ca3af',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  statValue: {
-    fontSize: 18,
-    color: '#111827',
-  },
-  statLink: {
+    fontWeight: '800',
     color: '#dc2626',
-    fontSize: 11,
-    fontWeight: '700',
+    letterSpacing: 1,
   },
 
-  // Sections
-  section: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    gap: 14,
-    marginBottom: 4,
-    backgroundColor: 'transparent',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  // Content
+  contentPadding: {
+    padding: 24,
   },
   sectionTitle: {
-    color: '#111827',
-  },
-  sectionSubtitle: {
-    color: '#9ca3af',
-    fontSize: 12,
-    marginTop: -8,
-  },
-  addCarBtn: {
-    backgroundColor: '#dc2626',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 10,
-    shadowColor: '#dc2626',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  addCarBtnText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 13,
-  },
-
-  // Vehicle cards
-  vehicleCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    overflow: 'hidden',
-    flexDirection: 'row',
-    gap: 0,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  vehicleImage: {
-    width: 100,
-    height: 96,
-  },
-  vehicleInfo: {
-    flex: 1,
-    padding: 14,
-    justifyContent: 'space-between',
-  },
-  vehicleTopRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-  },
-  vehicleName: {
-    fontSize: 15,
-    color: '#111827',
-    marginBottom: 2,
-  },
-  vehiclePlate: {
-    fontSize: 11,
-    color: '#9ca3af',
-  },
-  vehicleStatusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    marginTop: 6,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  vehicleStatus: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-
-  // Service history
-  historyCard: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  historyName: {
-    fontSize: 14,
-    color: '#111827',
-    marginBottom: 2,
-  },
-  historyVehicle: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginBottom: 3,
-  },
-  historyDateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  historyDate: {
-    fontSize: 11,
-    color: '#9ca3af',
-  },
-  historyRight: {
-    alignItems: 'flex-end',
-    gap: 6,
-  },
-  historyCost: {
-    fontSize: 13,
-    color: '#111827',
-  },
-  completedBadge: {
-    backgroundColor: '#dcfce7',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  completedBadgeText: {
-    color: '#166534',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-
-  // Loyalty card
-  loyaltyCard: {
-    marginHorizontal: 16,
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#111',
     marginBottom: 16,
-    backgroundColor: '#2563eb',
-    borderRadius: 20,
-    padding: 22,
-    gap: 18,
-    shadowColor: '#2563eb',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
+    letterSpacing: -0.5,
+  },
+  garageRow: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 32,
+  },
+  garageCard: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+  },
+  cardPressed: {
+    transform: [{ scale: 0.97 }],
+    opacity: 0.9,
+  },
+  iconBg: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  cardTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#111',
+    marginBottom: 2,
+  },
+  cardSub: {
+    fontSize: 11,
+    color: '#666',
+    fontWeight: '500',
+  },
+
+  // Loyalty
+  loyaltySection: {
+    marginBottom: 32,
+  },
+  loyaltyCard: {
+    backgroundColor: '#111',
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
     elevation: 8,
   },
   loyaltyHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-  },
-  loyaltyIconBg: {
-    width: 50,
-    height: 50,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    gap: 16,
+    marginBottom: 20,
   },
   loyaltyTitle: {
     color: '#fff',
-    fontSize: 17,
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  loyaltyPoints: {
+    color: '#dc2626',
+    fontSize: 14,
     fontWeight: '700',
   },
-  loyaltySubtitle: {
-    color: 'rgba(255,255,255,0.75)',
-    fontSize: 12,
-    marginTop: 2,
+  progressBarBg: {
+    height: 10,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 5,
+    marginBottom: 12,
   },
-  progressContainer: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 14,
-    padding: 16,
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#dc2626',
+    borderRadius: 5,
+  },
+  loyaltyNote: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+
+  // Settings
+  settingsSection: {
     gap: 8,
   },
-  progressHeader: {
+  settingsItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
   },
-  progressLabel: {
-    color: '#fff',
-    fontSize: 13,
+  settingIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
   },
-  progressValue: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#fff',
-    borderRadius: 4,
-  },
-  progressNote: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 11,
+  settingText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#374151',
   },
   bottomSpacer: {
-    height: 24,
+    height: 40,
   },
 });
