@@ -31,7 +31,7 @@ router.post('/', authMiddleware, async (req, res) => {
       return res.status(401).json({ message: 'Not authorized, user missing' });
     }
 
-    const { customerDetails, vehicleDetails, serviceDetails, image } = req.body;
+    const { customerDetails, vehicleDetails, image } = req.body;
 
     // Safety check: ensure required vehicleDetails exist
     if (!vehicleDetails || !vehicleDetails.brand || !vehicleDetails.model || !vehicleDetails.regNumber || !vehicleDetails.category) {
@@ -41,7 +41,6 @@ router.post('/', authMiddleware, async (req, res) => {
     const newVehicle = new Vehicle({
       customerDetails: customerDetails || {},
       vehicleDetails: vehicleDetails,
-      serviceDetails: serviceDetails || {},
       image: image || null,
       owner: req.user.id,
     });
@@ -76,14 +75,13 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 // UPDATE a vehicle
 router.put('/:id', authMiddleware, async (req, res) => {
   try {
-    const { customerDetails, vehicleDetails, serviceDetails, image, status } = req.body;
+    const { customerDetails, vehicleDetails, image, status } = req.body;
     let vehicle = await Vehicle.findOne({ _id: req.params.id, owner: req.user.id });
     
     if (!vehicle) return res.status(404).json({ message: 'Vehicle not found' });
 
     if (customerDetails) vehicle.customerDetails = customerDetails;
     if (vehicleDetails) vehicle.vehicleDetails = vehicleDetails;
-    if (serviceDetails) vehicle.serviceDetails = serviceDetails;
     if (image !== undefined) vehicle.image = image;
     if (status) vehicle.status = status;
 

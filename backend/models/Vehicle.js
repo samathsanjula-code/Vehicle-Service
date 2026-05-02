@@ -38,12 +38,7 @@ const vehicleSchema = new mongoose.Schema({
       type: String,
       enum: ['manual', 'automatic'],
     },
-  },
-  serviceDetails: {
-    serviceType: { type: String },
-    preferredDate: { type: Date },
-    preferredTimeSlot: { type: String },
-    issueDescription: { type: String },
+    mileage: { type: String },
   },
   image: { type: String },
   status: {

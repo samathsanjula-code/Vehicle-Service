@@ -11,13 +11,11 @@ router.post('/', authMiddleware, async (req, res) => {
     const {
       customerDetails,
       vehicleDetails,
-      serviceDetails,
     } = req.body;
 
     const newRequest = new VehicleService({
       customerDetails,
       vehicleDetails,
-      serviceDetails,
       owner: req.user.id,
     });
 

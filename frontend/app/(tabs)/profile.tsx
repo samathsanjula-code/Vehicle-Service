@@ -17,22 +17,19 @@ import { ThemedView } from '@/components/themed-view';
 
 type Vehicle = {
   _id: string;
-  brand: string;
-  model: string;
-  year?: string;
-  regNumber: string;
+  vehicleDetails?: {
+    brand?: string;
+    model?: string;
+    year?: string;
+    regNumber?: string;
+    fuelType?: string;
+    mileage?: string;
+  };
   image?: string;
   status?: string;
 };
 
-type ServiceRecord = {
-  id: number;
-  service: string;
-  date: string;
-  vehicle: string;
-  cost: string;
-  status: string;
-};
+
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -91,16 +88,7 @@ export default function ProfileScreen() {
     );
   }
 
-  const mockServices = [
-    {
-      id: 1,
-      name: 'Full Engine Service',
-      vehicle: vehicles.length > 0 ? `${vehicles[0].brand} ${vehicles[0].model}` : 'BMW 5 Series',
-      date: 'March 15, 2026',
-      price: 'LKR 45,000',
-      status: 'Completed'
-    }
-  ];
+
 
   return (
     <View style={styles.container}>
@@ -126,15 +114,6 @@ export default function ProfileScreen() {
             <Pressable onPress={() => router.push('/service-history')}>
               <Text style={styles.statLink}>View All  <Ionicons name="chevron-forward" size={10} /></Text>
             </Pressable>
-          </View>
-
-          <View style={styles.statCard}>
-            <View style={[styles.statIconCircle, { backgroundColor: '#eff6ff' }]}>
-              <Ionicons name="star" size={18} color="#2563eb" />
-            </View>
-            <Text style={styles.statLabel}>LOYALTY POINTS</Text>
-            <Text style={styles.statValue}>2,450 pts</Text>
-            <Text style={[styles.statLink, { color: '#2563eb' }]}>Gold Tier Status</Text>
           </View>
         </View>
 
@@ -168,10 +147,28 @@ export default function ProfileScreen() {
                 />
                 <View style={styles.vehicleDetails}>
                   <View style={styles.vehicleHeaderRow}>
-                    <Text style={styles.vehicleName}>{vehicle.brand} {vehicle.model}</Text>
+                    <Text style={styles.vehicleName}>
+                      {vehicle.vehicleDetails?.brand} {vehicle.vehicleDetails?.model}
+                    </Text>
                     <Ionicons name="ellipsis-vertical" size={18} color="#9ca3af" />
                   </View>
-                  <Text style={styles.vehicleSubText}>{vehicle.regNumber} • {vehicle.year}</Text>
+                  <Text style={styles.vehicleSubText}>
+                    {vehicle.vehicleDetails?.regNumber || 'No Plate'} • {vehicle.vehicleDetails?.year || ''}
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 12 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                       <Ionicons name="water-outline" size={14} color="#6b7280" />
+                       <Text style={{ fontSize: 12, color: '#6b7280', textTransform: 'capitalize' }}>
+                         {vehicle.vehicleDetails?.fuelType || 'N/A'}
+                       </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                       <Ionicons name="speedometer-outline" size={14} color="#6b7280" />
+                       <Text style={{ fontSize: 12, color: '#6b7280' }}>
+                         {vehicle.vehicleDetails?.mileage ? `${vehicle.vehicleDetails.mileage} km` : 'N/A'}
+                       </Text>
+                    </View>
+                  </View>
                   <View style={styles.statusRow}>
                     <View style={[styles.statusDot, { backgroundColor: '#10b981' }]} />
                     <Text style={[styles.statusText, { color: '#10b981' }]}>{vehicle.status || 'HEALTHY'}</Text>
@@ -182,36 +179,7 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        {/* ── Recent Services Section ────────────────────────────────────── */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Services</Text>
-            <Pressable>
-              <Text style={styles.viewAllLink}>View All</Text>
-            </Pressable>
-          </View>
 
-          {mockServices.map(service => (
-            <View key={service.id} style={styles.serviceCard}>
-              <View style={styles.serviceMain}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.serviceName}>{service.name}</Text>
-                  <Text style={styles.serviceVehicle}>{service.vehicle}</Text>
-                  <View style={styles.serviceDateRow}>
-                    <Ionicons name="time-outline" size={14} color="#9ca3af" style={{ marginRight: 4 }} />
-                    <Text style={styles.serviceDate}>{service.date}</Text>
-                  </View>
-                </View>
-                <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={styles.servicePrice}>{service.price}</Text>
-                  <View style={styles.completedBadge}>
-                    <Text style={styles.completedBadgeText}>{service.status}</Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          ))}
-        </View>
 
         {/* ── Bottom Buttons ────────────────────────────────────────────── */}
         <View style={{ paddingHorizontal: 20, marginBottom: 40 }}>

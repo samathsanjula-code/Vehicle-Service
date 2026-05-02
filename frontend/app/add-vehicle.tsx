@@ -61,6 +61,7 @@ export default function AddVehicleScreen() {
   const [regNumber, setRegNumber] = useState('');
   const [fuelType, setFuelType] = useState<string | null>(null);
   const [transmission, setTransmission] = useState<string | null>(null);
+  const [mileage, setMileage] = useState('');
   
   const [images, setImages] = useState<string[]>([]);
 
@@ -89,6 +90,7 @@ export default function AddVehicleScreen() {
             setRegNumber(record.vehicleDetails?.regNumber || '');
             setFuelType(record.vehicleDetails?.fuelType || null);
             setTransmission(record.vehicleDetails?.transmission || null);
+            setMileage(record.vehicleDetails?.mileage || '');
             setImages(record.image ? [record.image] : []);
           } else {
             console.error('Failed to fetch vehicle:', record.message);
@@ -176,6 +178,7 @@ export default function AddVehicleScreen() {
           regNumber,
           fuelType,
           transmission,
+          mileage,
         },
         image: images.length > 0 ? images[0] : null,
       };
@@ -360,6 +363,17 @@ export default function AddVehicleScreen() {
                   selectedTextStyle={styles.selectedTextStyle}
                 />
               </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Mileage (km)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. 50000"
+                keyboardType="numeric"
+                value={mileage}
+                onChangeText={setMileage}
+              />
             </View>
           </View>
 
