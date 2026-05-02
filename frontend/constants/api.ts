@@ -18,6 +18,9 @@ export const API = {
   auth: `${BASE_URL}/api/auth`,
   services: `${BASE_URL}/api/services`,
   mechanics: `${BASE_URL}/api/mechanics`,
+  // Added from Vehicle-management1 branch:
+  vehicleService: `${BASE_URL}/api/vehicle-service`,
+  vehicles: `${BASE_URL}/api/vehicles`,
 } as const;
 
 export const BOOKINGS_URL = `${BASE_URL}/api/bookings`;

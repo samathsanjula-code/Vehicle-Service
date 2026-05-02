@@ -1,0 +1,180 @@
+
+--- ERROR at 2026-05-02T07:55:16.899Z ---
+MongoServerSelectionError: getaddrinfo ENOTFOUND ac-k0gkmpf-shard-00-01.nmh4rje.mongodb.net
+    at Topology.selectServer (C:\Users\ASUS\Downloads\Wnew\Wnew\backend\node_modules\mongodb\lib\sdam\topology.js:327:38)
+    at async tryOperation (C:\Users\ASUS\Downloads\Wnew\Wnew\backend\node_modules\mongodb\lib\operations\execute_operation.js:196:22)
+    at async executeOperation (C:\Users\ASUS\Downloads\Wnew\Wnew\backend\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+    at async Collection.insertOne (C:\Users\ASUS\Downloads\Wnew\Wnew\backend\node_modules\mongodb\lib\collection.js:154:16)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-k0gkmpf-shard-00-00.nmh4rje.mongodb.net:27017": {
+        "address": "ac-k0gkmpf-shard-00-00.nmh4rje.mongodb.net:27017",
+        "type": "RSSecondary",
+        "hosts": [
+          "ac-k0gkmpf-shard-00-00.nmh4rje.mongodb.net:27017",
+          "ac-k0gkmpf-shard-00-01.nmh4rje.mongodb.net:27017",
+          "ac-k0gkmpf-shard-00-02.nmh4rje.mongodb.net:27017"
+        ],
+        "passives": [],
+        "arbiters": [],
+        "tags": {
+          "nodeType": "ELECTABLE",
+          "region": "AP_SOUTHEAST_1",
+          "workloadType": "OPERATIONAL",
+          "provider": "AWS",
+          "diskState": "READY",
+          "cacheState": "READY",
+          "availabilityZone": "apse1-az2"
+        },
+        "minWireVersion": 0,
+        "maxWireVersion": 25,
+        "roundTripTime": 144,
+        "minRoundTripTime": 144,
+        "lastUpdateTime": 20603528,
+        "lastWriteDate": {
+          "$date": "2026-05-02T07:51:42Z"
+        },
+        "error": null,
+        "topologyVersion": {
+          "processId": {
+            "$oid": "69f3bd5ce63693ee2c050be4"
+          },
+          "counter": 4
+        },
+        "setName": "atlas-5ndtig-shard-0",
+        "setVersion": 11,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": 30,
+        "maxMessageSizeBytes": 48000000,
+        "maxWriteBatchSize": 100000,
+        "maxBsonObjectSize": 16777216,
+        "primary": "ac-k0gkmpf-shard-00-01.nmh4rje.mongodb.net:27017",
+        "me": "ac-k0gkmpf-shard-00-00.nmh4rje.mongodb.net:27017",
+        "$clusterTime": {
+          "clusterTime": {
+            "$timestamp": {
+              "t": 1777708302,
+              "i": 13
+            }
+          },
+          "signature": {
+            "hash": {
+              "$binary": {
+                "base64": "2r0RSQa1vQiX9vuiGcU/haKXhoc=",
+                "subType": "00"
+              }
+            },
+            "keyId": 7571562777710428000
+          }
+        },
+        "iscryptd": false
+      },
+      "ac-k0gkmpf-shard-00-01.nmh4rje.mongodb.net:27017": {
+        "address": "ac-k0gkmpf-shard-00-01.nmh4rje.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 20601845,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-k0gkmpf-shard-00-02.nmh4rje.mongodb.net:27017": {
+        "address": "ac-k0gkmpf-shard-00-02.nmh4rje.mongodb.net:27017",
+        "type": "RSSecondary",
+        "hosts": [
+          "ac-k0gkmpf-shard-00-00.nmh4rje.mongodb.net:27017",
+          "ac-k0gkmpf-shard-00-01.nmh4rje.mongodb.net:27017",
+          "ac-k0gkmpf-shard-00-02.nmh4rje.mongodb.net:27017"
+        ],
+        "passives": [],
+        "arbiters": [],
+        "tags": {
+          "nodeType": "ELECTABLE",
+          "diskState": "READY",
+          "region": "AP_SOUTHEAST_1",
+          "availabilityZone": "apse1-az3",
+          "cacheState": "READY",
+          "workloadType": "OPERATIONAL",
+          "provider": "AWS"
+        },
+        "minWireVersion": 0,
+        "maxWireVersion": 25,
+        "roundTripTime": 232,
+        "minRoundTripTime": 232,
+        "lastUpdateTime": 20603296,
+        "lastWriteDate": {
+          "$date": "2026-05-02T07:51:42Z"
+        },
+        "error": null,
+        "topologyVersion": {
+          "processId": {
+            "$oid": "69f3be99d231528087d7f6b1"
+          },
+          "counter": 3
+        },
+        "setName": "atlas-5ndtig-shard-0",
+        "setVersion": 11,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": 30,
+        "maxMessageSizeBytes": 48000000,
+        "maxWriteBatchSize": 100000,
+        "maxBsonObjectSize": 16777216,
+        "primary": "ac-k0gkmpf-shard-00-01.nmh4rje.mongodb.net:27017",
+        "me": "ac-k0gkmpf-shard-00-02.nmh4rje.mongodb.net:27017",
+        "$clusterTime": {
+          "clusterTime": {
+            "$timestamp": {
+              "t": 1777708302,
+              "i": 13
+            }
+          },
+          "signature": {
+            "hash": {
+              "$binary": {
+                "base64": "2r0RSQa1vQiX9vuiGcU/haKXhoc=",
+                "subType": "00"
+              }
+            },
+            "keyId": 7571562777710428000
+          }
+        },
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-5ndtig-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff000000000000007e"
+    },
+    "maxSetVersion": 11,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": 30
+  }
+}

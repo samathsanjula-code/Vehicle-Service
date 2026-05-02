@@ -1,5 +1,7 @@
-import { Image } from 'expo-image';
-import { useEffect, useRef, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { Image, ImageSource } from 'expo-image';
+import { router } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Dimensions,
   FlatList,
@@ -12,13 +14,11 @@ import {
   ViewToken,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 
+import { heroSlides, serviceImages, galleryImages, HeroSlide } from '@/assets/images';
+import { HelloWave } from '@/components/hello-wave';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { HelloWave } from '@/components/hello-wave';
-import { heroSlides, serviceImages, galleryImages } from '@/assets/images';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -59,7 +59,7 @@ const roadsideServices: RoadsideService[] = [
 ];
 
 type MainService = {
-  image: ReturnType<typeof require>;
+  image: ImageSource;
   name: string;
   description: string;
 };
@@ -96,8 +96,8 @@ const mainServices: MainService[] = [
 
 export default function HomeScreen() {
   const [activeSlide, setActiveSlide] = useState(0);
-  const slideshowRef = useRef<FlatList>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const slideshowRef = useRef<FlatList<HeroSlide>>(null);
+  const timerRef = useRef<any>(null);
 
   // Auto-scroll slideshow
   useEffect(() => {
@@ -114,7 +114,7 @@ export default function HomeScreen() {
   }, []);
 
   const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    ({ viewableItems }: { viewableItems: Array<ViewToken> }) => {
       if (viewableItems.length > 0 && viewableItems[0].index !== null) {
         setActiveSlide(viewableItems[0].index);
       }
@@ -175,7 +175,7 @@ export default function HomeScreen() {
 
           {/* Pagination dots */}
           <View style={styles.dotsContainer}>
-            {heroSlides.map((_, i) => (
+            {heroSlides.map((_: HeroSlide, i: number) => (
               <View
                 key={i}
                 style={[styles.dot, i === activeSlide && styles.dotActive]}
@@ -233,6 +233,7 @@ export default function HomeScreen() {
                 </ThemedText>
               </View>
             </View>
+
           ))}
         </ThemedView>
 
