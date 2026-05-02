@@ -53,3 +53,7 @@ frontend/ios/
 
 # VS Code
 .vscode/
+
+expo-env.d.ts
+
+start.bat

@@ -4,7 +4,7 @@
 //     For Local: It defaults to your current LAN IP.
 // ─────────────────────────────────────────────────────────────
 
-const DEFAULT_LOCAL_URL = 'http://192.168.1.101:5000';
+const DEFAULT_LOCAL_URL = 'http://192.168.1.5:5000';
 
 export const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL || DEFAULT_LOCAL_URL;
 
