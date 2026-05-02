@@ -1,11 +1,12 @@
 // ─────────────────────────────────────────────────────────────
 //  API Configuration
-//  👉 Change ONLY this file when running on a different machine.
-//     Set BASE_URL to your PC's LAN IP + the backend port.
-//     Example: 'http://192.168.1.105:5000'
+//  👉 For Production: Set EXPO_PUBLIC_BASE_URL in your Vercel settings.
+//     For Local: It defaults to your current LAN IP.
 // ─────────────────────────────────────────────────────────────
 
-export const BASE_URL = 'http://192.168.1.101:5000';
+const DEFAULT_LOCAL_URL = 'http://192.168.1.101:5000';
+
+export const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL || DEFAULT_LOCAL_URL;
 
 export const API = {
   login:    `${BASE_URL}/api/auth/login`,
