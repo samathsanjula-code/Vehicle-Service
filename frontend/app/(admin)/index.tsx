@@ -10,29 +10,22 @@ export default function AdminDashboard() {
   const { logout, token } = useAuth();
   const [stats, setStats] = useState({ total: 0, available: 0, busy: 0 });
 
-  useFocusEffect(
-    useCallback(() => {
-      // Fetch mechanics for stats
-      const fetchMechanics = async () => {
-        try {
-          const res = await fetch('http://192.168.1.100:5005/api/mechanics', { // UPDATE IP TO YOURS
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          if (res.ok) {
-            const data = await res.json();
-            setStats({
-              total: data.length,
-              available: data.filter((m: any) => m.availability === 'Available').length,
-              busy: data.filter((m: any) => m.availability === 'Busy').length,
-            });
-          }
-        } catch (e) {
-          console.log(e);
-        }
-      };
-      fetchMechanics();
-    }, [token])
-  );
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     // Fetch mechanics for stats (Disabled because route doesn't exist yet)
+  //     const fetchMechanics = async () => {
+  //       try {
+  //         // const res = await fetch('http://192.168.1.100:5005/api/mechanics', { 
+  //         //   headers: { Authorization: `Bearer ${token}` }
+  //         // });
+  //         // if (res.ok) { ... }
+  //       } catch (e) {
+  //         console.log(e);
+  //       }
+  //     };
+  //     fetchMechanics();
+  //   }, [token])
+  // );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -84,9 +77,9 @@ export default function AdminDashboard() {
           </View>
         </View>
 
-        {/* Navigation Actions */}
+        {/* Mechanic Management Section */}
         <View style={styles.actionsContainer}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <Text style={styles.sectionTitle}>Mechanic Management</Text>
           
           <TouchableOpacity 
             style={styles.actionCard} 
@@ -126,6 +119,39 @@ export default function AdminDashboard() {
             <View style={styles.actionText}>
               <Text style={styles.actionTitle}>Assign Mechanics</Text>
               <Text style={styles.actionDesc}>Link available mechanics to bookings</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color="#9ca3af" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Vehicle Management Section */}
+        <View style={[styles.actionsContainer, { marginTop: 24 }]}>
+          <Text style={styles.sectionTitle}>Vehicle Management</Text>
+          
+          <TouchableOpacity 
+            style={styles.actionCard} 
+            onPress={() => router.push('/(admin)/manage-vehicles')}
+          >
+            <View style={[styles.actionIconBg, { backgroundColor: '#f0fdf4' }]}>
+              <Text style={{ fontSize: 24 }}>🚗</Text>
+            </View>
+            <View style={styles.actionText}>
+              <Text style={styles.actionTitle}>Manage Vehicles</Text>
+              <Text style={styles.actionDesc}>View, edit, and remove vehicles</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color="#9ca3af" />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.actionCard} 
+            onPress={() => router.push('/add-vehicle')}
+          >
+            <View style={[styles.actionIconBg, { backgroundColor: '#fdf2f8' }]}>
+              <Ionicons name="add-circle" size={28} color="#db2777" />
+            </View>
+            <View style={styles.actionText}>
+              <Text style={styles.actionTitle}>Add New Vehicle</Text>
+              <Text style={styles.actionDesc}>Register a vehicle with owner info and photos</Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color="#9ca3af" />
           </TouchableOpacity>

@@ -3,6 +3,19 @@ const router = express.Router();
 const Vehicle = require('../models/Vehicle');
 const authMiddleware = require('../middleware/auth');
 
+// GET all vehicles for Admin (Must be before /:id)
+router.get('/admin/all', authMiddleware, async (req, res) => {
+  try {
+    // Note: If you want strictly admins only, you can check req.user.isAdmin here if your token provides it.
+    const vehicles = await Vehicle.find()
+      .populate('owner', 'fullName email phone')
+      .sort({ createdAt: -1 });
+    res.json(vehicles);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error while fetching all vehicles for admin' });
+  }
+});
+
 // GET all vehicles for the logged-in user
 router.get('/', authMiddleware, async (req, res) => {
   try {
@@ -16,7 +29,8 @@ router.get('/', authMiddleware, async (req, res) => {
 // GET a single vehicle by ID
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
-    const vehicle = await Vehicle.findOne({ _id: req.params.id, owner: req.user.id });
+    const filter = req.user.isAdmin ? { _id: req.params.id } : { _id: req.params.id, owner: req.user.id };
+    const vehicle = await Vehicle.findOne(filter);
     if (!vehicle) return res.status(404).json({ message: 'Vehicle not found' });
     res.json(vehicle);
   } catch (err) {
@@ -64,7 +78,8 @@ router.post('/', authMiddleware, async (req, res) => {
 // DELETE a vehicle
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
-    const vehicle = await Vehicle.findOneAndDelete({ _id: req.params.id, owner: req.user.id });
+    const filter = req.user.isAdmin ? { _id: req.params.id } : { _id: req.params.id, owner: req.user.id };
+    const vehicle = await Vehicle.findOneAndDelete(filter);
     if (!vehicle) return res.status(404).json({ message: 'Vehicle not found' });
     res.json({ message: 'Vehicle removed' });
   } catch (err) {
@@ -76,7 +91,8 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 router.put('/:id', authMiddleware, async (req, res) => {
   try {
     const { customerDetails, vehicleDetails, image, status } = req.body;
-    let vehicle = await Vehicle.findOne({ _id: req.params.id, owner: req.user.id });
+    const filter = req.user.isAdmin ? { _id: req.params.id } : { _id: req.params.id, owner: req.user.id };
+    let vehicle = await Vehicle.findOne(filter);
     
     if (!vehicle) return res.status(404).json({ message: 'Vehicle not found' });
 

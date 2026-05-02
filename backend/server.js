@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 
 const authRoutes = require('./routes/auth');
-const vehicleServiceRoutes = require('./routes/vehicleService');
+// const vehicleServiceRoutes = require('./routes/vehicleService');
 const vehicleRoutes = require('./routes/vehicles');
 const User = require('./models/User');
 
@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
-app.use('/api/vehicle-service', vehicleServiceRoutes);
+// app.use('/api/vehicle-service', vehicleServiceRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 
 // Health check

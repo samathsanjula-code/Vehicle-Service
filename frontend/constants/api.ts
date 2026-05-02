@@ -13,4 +13,5 @@ export const API = {
   auth: `${BASE_URL}/api/auth`,
   vehicleService: `${BASE_URL}/api/vehicle-service`,
   vehicles: `${BASE_URL}/api/vehicles`,
+  adminVehicles: `${BASE_URL}/api/vehicles/admin/all`,
 } as const;

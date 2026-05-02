@@ -45,14 +45,13 @@ router.get('/', authMiddleware, async (req, res) => {
 // @access  Private
 router.put('/:id', authMiddleware, async (req, res) => {
   try {
-    const { customerDetails, vehicleDetails, serviceDetails } = req.body;
-    
+    const { customerDetails, vehicleDetails } = req.body;
+
     let request = await VehicleService.findOne({ _id: req.params.id, owner: req.user.id });
     if (!request) return res.status(404).json({ message: 'Record not found' });
 
     request.customerDetails = customerDetails || request.customerDetails;
     request.vehicleDetails = vehicleDetails || request.vehicleDetails;
-    request.serviceDetails = serviceDetails || request.serviceDetails;
 
     await request.save();
     res.json(request);

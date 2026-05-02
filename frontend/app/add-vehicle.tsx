@@ -66,7 +66,15 @@ export default function AddVehicleScreen() {
   const [images, setImages] = useState<string[]>([]);
 
   const [loading, setLoading] = useState(false);
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+
+  // Auto-fill customer details if it's a new entry and user is NOT an admin
+  useEffect(() => {
+    if (!isEditing && user && !user.isAdmin) {
+      setFullName(user.fullName || '');
+      setContactNumber(user.phone || '');
+    }
+  }, [isEditing, user]);
 
   // Load existing data if editing
   useEffect(() => {
