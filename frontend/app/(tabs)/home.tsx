@@ -242,8 +242,6 @@ export default function HomeScreen() {
             </View>
           </Animated.View>
 
-          </Animated.View>
-
           {/* ── Core Services (Horizontal Scroll) ─────────────────────────── */}
           <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.section}>
             <View style={styles.sectionHeader}>
