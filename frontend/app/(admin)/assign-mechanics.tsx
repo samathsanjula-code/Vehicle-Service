@@ -78,10 +78,12 @@ export default function AssignMechanics() {
         Alert.alert('Success', 'Mechanic assigned successfully!');
         setBookings(prev => prev.filter(b => b._id !== bookingId));
       } else {
-        Alert.alert('Error', 'Failed to assign mechanic.');
+        const errorData = await res.json().catch(() => ({}));
+        Alert.alert('Error', errorData.message || 'Failed to assign mechanic.');
+        console.log('Assign Mechanic Error:', errorData);
       }
     } catch (e) {
-      console.error(e);
+      console.error('Assign Mechanic Exception:', e);
       Alert.alert('Error', 'Network request failed');
     }
   };
