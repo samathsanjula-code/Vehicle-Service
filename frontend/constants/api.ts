@@ -1,16 +1,9 @@
-// ─────────────────────────────────────────────────────────────
-//  API Configuration
-//  👉 For Production: Set EXPO_PUBLIC_BASE_URL in your Vercel settings.
-//     For Local: It defaults to your current LAN IP.
-// ─────────────────────────────────────────────────────────────
+// API Configuration
+// ⚠️ Change ONLY this file when running on a different machine.
+//    Set BASE_URL to your PC's LAN IP + the backend port.
+//    Example: 'http://192.168.1.105:5000'
 
-const PRODUCTION_URL = process.env.EXPO_PUBLIC_PRODUCTION_URL || "https://vehicle-service-1-9z14.onrender.com";
-const DEFAULT_LOCAL_URL = 'http://192.168.1.5:5000';
-
-// Auto-switch: Use local IP in development, Render URL in production
-export const BASE_URL = __DEV__ 
-  ? (process.env.EXPO_PUBLIC_BASE_URL || DEFAULT_LOCAL_URL)
-  : PRODUCTION_URL;
+export const BASE_URL = 'http://172.16.102.32:5000';
 
 export const API = {
   login: `${BASE_URL}/api/auth/login`,
@@ -18,9 +11,9 @@ export const API = {
   auth: `${BASE_URL}/api/auth`,
   services: `${BASE_URL}/api/services`,
   mechanics: `${BASE_URL}/api/mechanics`,
-  // Added from Vehicle-management1 branch:
   vehicleService: `${BASE_URL}/api/vehicle-service`,
   vehicles: `${BASE_URL}/api/vehicles`,
+  adminAllVehicles: `${BASE_URL}/api/vehicles/admin/all`,
 } as const;
 
 export const BOOKINGS_URL = `${BASE_URL}/api/bookings`;

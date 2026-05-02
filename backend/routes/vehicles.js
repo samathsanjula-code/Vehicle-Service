@@ -13,6 +13,21 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
+// GET all vehicles for Admin (All users' vehicles)
+router.get('/admin/all', authMiddleware, async (req, res) => {
+  try {
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ message: 'Access denied. Admin only.' });
+    }
+    const vehicles = await Vehicle.find()
+      .populate('owner', 'fullName email phone')
+      .sort({ createdAt: -1 });
+    res.json(vehicles);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error while fetching all vehicles' });
+  }
+});
+
 // GET a single vehicle by ID
 router.get('/:id', authMiddleware, async (req, res) => {
   try {

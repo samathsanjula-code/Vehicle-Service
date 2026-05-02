@@ -48,7 +48,6 @@ router.post('/register', async (req, res) => {
         fullName: newUser.fullName,
         email: newUser.email,
         phone: newUser.phone,
-        loyaltyPoints: newUser.loyaltyPoints,
       },
     });
   } catch (err) {
@@ -88,7 +87,7 @@ router.post('/login', async (req, res) => {
 
     // Generate JWT
     const token = jwt.sign(
-      { id: user._id, email: user.email, fullName: user.fullName, isAdmin: user.isAdmin },
+      { id: user._id, email: user.email, fullName: user.fullName },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -104,7 +103,6 @@ router.post('/login', async (req, res) => {
         email: user.email,
         phone: user.phone,
         isAdmin: user.isAdmin,
-        loyaltyPoints: user.loyaltyPoints,
       },
     });
   } catch (err) {

@@ -233,11 +233,10 @@ export default function AddVehicleScreen() {
             <Pressable onPress={() => router.back()} style={styles.backButton}>
               <Ionicons name="arrow-back" size={24} color="#111827" />
             </Pressable>
-            <View style={styles.headerTitleContainer}>
-              <Text style={styles.title}>{isEditing ? 'Update Vehicle' : 'Add Vehicle'}</Text>
-              <Text style={styles.subtitle}>{isEditing ? 'Modify your vehicle details' : 'Register a new vehicle'}</Text>
+            <View>
+              <ThemedText type="title" style={styles.title}>{isEditing ? 'Update Vehicle' : 'Add Vehicle'}</ThemedText>
+              <Text style={styles.subtitle}>{isEditing ? 'Modify your vehicle details' : 'Register a new vehicle to your profile'}</Text>
             </View>
-            <View style={{ width: 40 }} /> 
           </View>
 
           {/* Section: Customer Details */}
@@ -436,16 +435,8 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-    paddingHorizontal: 20,
-    marginHorizontal: -20, // To make border go full width
-  },
-  headerTitleContainer: {
-    alignItems: 'center',
+    paddingVertical: 24,
+    gap: 16,
   },
   backButton: {
     width: 40,
@@ -456,13 +447,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 28,
     color: '#111827',
-    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#6b7280',
     marginTop: 2,
   },
