@@ -7,24 +7,22 @@ import { ServiceChip } from '../../components/booking/ServiceChip';
 import { TimeSlotPicker } from '../../components/booking/TimeSlotPicker';
 import { API } from '../../constants/api';
 import { useBookings } from '../../hooks/useBookings';
+import { useAuth } from '../../context/AuthContext';
 
 type ServiceItem = { _id: string; name: string; price: number; discountPrice?: number; };
 const TIME_SLOTS = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '1:00 PM', '2:00 PM', '3:30 PM', '4:30 PM'];
 
-// Mock vehicles until API is ready
-const MOCK_VEHICLES = [
-  { id: '65f3a0921c1f5b0012345678', name: 'Toyota Corolla — ABC-1234' },
-  { id: '65f3a0921c1f5b0012345679', name: 'Honda Civic — DEF-5678' }
-];
-
 export default function BookingFormScreen() {
   const params = useLocalSearchParams();
   const { createBooking, updateBooking, fetchBookingById, loading } = useBookings();
+  const { token, user } = useAuth();
+  
   const isEditMode = !!params.editBookingId;
   
   const [step, setStep] = useState(1);
   const [vehicleId, setVehicleId] = useState(''); 
   const [isVehicleDropdownOpen, setIsVehicleDropdownOpen] = useState(false);
+  const [userVehicles, setUserVehicles] = useState<any[]>([]);
 
   const [serviceTypes, setServiceTypes] = useState<string[]>(
     typeof params.serviceType === 'string' ? [params.serviceType] : []
@@ -42,6 +40,7 @@ export default function BookingFormScreen() {
   const [loadingServices, setLoadingServices] = useState(true);
 
   useEffect(() => {
+    // Fetch Services
     fetch(API.services)
       .then(res => res.json())
       .then(data => {
@@ -53,6 +52,18 @@ export default function BookingFormScreen() {
         setLoadingServices(false);
       });
 
+    // Fetch User Vehicles
+    if (token) {
+      fetch(API.vehicles, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setUserVehicles(data);
+      })
+      .catch(err => console.error('Fetch vehicles error:', err));
+    }
+
     if (isEditMode) {
       fetchBookingById(params.editBookingId as string).then(booking => {
         setVehicleId(booking.vehicleId._id || booking.vehicleId);
@@ -62,7 +73,7 @@ export default function BookingFormScreen() {
         setNotes(booking.notes || '');
       }).catch(err => console.error(err));
     }
-  }, [params.editBookingId]);
+  }, [params.editBookingId, token]);
 
   const toggleService = (s: string) => {
     if (serviceTypes.includes(s)) {
@@ -142,7 +153,10 @@ export default function BookingFormScreen() {
     }
   };
 
-  const selectedVehicleName = MOCK_VEHICLES.find(v => v.id === vehicleId)?.name || 'Select Vehicle';
+  const selectedVehicle = userVehicles.find(v => (v._id || v.id) === vehicleId);
+  const selectedVehicleName = selectedVehicle 
+    ? `${selectedVehicle.vehicleDetails?.brand} — ${selectedVehicle.vehicleDetails?.regNumber}`
+    : 'Select Vehicle';
 
   return (
     <View style={styles.container}>
@@ -170,18 +184,25 @@ export default function BookingFormScreen() {
 
             {isVehicleDropdownOpen && (
               <View style={styles.dropdownList}>
-                {MOCK_VEHICLES.map(v => (
+                {userVehicles.map(v => (
                   <TouchableOpacity 
-                    key={v.id} 
-                    style={[styles.dropdownItem, vehicleId === v.id && styles.dropdownItemSelected]}
+                    key={v._id || v.id} 
+                    style={[styles.dropdownItem, vehicleId === (v._id || v.id) && styles.dropdownItemSelected]}
                     onPress={() => {
-                      setVehicleId(v.id);
+                      setVehicleId(v._id || v.id);
                       setIsVehicleDropdownOpen(false);
                     }}
                   >
-                    <Text style={[styles.dropdownItemText, vehicleId === v.id && styles.dropdownItemTextSelected]}>{v.name}</Text>
+                    <Text style={[styles.dropdownItemText, vehicleId === (v._id || v.id) && styles.dropdownItemTextSelected]}>
+                      {v.vehicleDetails?.brand} — {v.vehicleDetails?.regNumber}
+                    </Text>
                   </TouchableOpacity>
                 ))}
+                {userVehicles.length === 0 && (
+                  <TouchableOpacity style={styles.dropdownItem} onPress={() => router.push('/add-vehicle')}>
+                    <Text style={{ color: '#dc2626', fontWeight: 'bold' }}>+ Add a vehicle first</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             )}
 

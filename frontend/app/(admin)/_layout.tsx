@@ -10,6 +10,7 @@ export default function AdminLayout() {
       <Stack.Screen name="add-service" options={{ headerShown: false }} />
       <Stack.Screen name="manage-services" options={{ headerShown: false }} />
       <Stack.Screen name="edit-service" options={{ headerShown: false }} />
+      <Stack.Screen name="manage-vehicles" options={{ headerShown: false }} />
     </Stack>
   );
 }

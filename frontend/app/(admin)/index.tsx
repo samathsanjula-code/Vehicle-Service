@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -14,26 +14,23 @@ export default function AdminDashboard() {
 
   useFocusEffect(
     useCallback(() => {
-      // Fetch mechanics for stats
+      // 1. Handle Back Button (Prevent going back to user area)
+      const onBackPress = () => true;
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+      // 2. Fetch Dashboard Data
       const fetchDashboardData = async () => {
         try {
-          const tokenStr = token || await AsyncStorage.getItem('token');
+          const tokenStr = token || (await AsyncStorage.getItem("token"));
           
-          // Fetch mechanics
-          const mechRes = await fetch(API.mechanics, {
-            headers: { Authorization: `Bearer ${tokenStr}` }
-          });
-          let mechanicsData = [];
-          if (mechRes.ok) mechanicsData = await mechRes.json();
+          const [mechRes, bookRes] = await Promise.all([
+            fetch(API.mechanics, { headers: { Authorization: `Bearer ${tokenStr}` } }),
+            fetch(BOOKINGS_URL, { headers: { Authorization: `Bearer ${tokenStr}` } })
+          ]);
 
-          // Fetch bookings for revenue
-          const bookRes = await fetch(BOOKINGS_URL, {
-            headers: { Authorization: `Bearer ${tokenStr}` }
-          });
-          let bookingsData = [];
-          if (bookRes.ok) bookingsData = await bookRes.json();
+          let mechanicsData = mechRes.ok ? await mechRes.json() : [];
+          let bookingsData = bookRes.ok ? await bookRes.json() : [];
 
-          // Calculate today's revenue
           const today = new Date().toISOString().split('T')[0];
           const todaysBookings = bookingsData.filter((b: any) => 
             b.scheduledDate && b.scheduledDate.startsWith(today) && b.status !== 'Cancelled'
@@ -47,10 +44,13 @@ export default function AdminDashboard() {
             revenueToday
           });
         } catch (e) {
-          console.error('Failed to load dashboard data:', e);
+          console.error('Dashboard error:', e);
         }
       };
+
       fetchDashboardData();
+
+      return () => subscription.remove();
     }, [token])
   );
 
@@ -199,114 +199,22 @@ export default function AdminDashboard() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: '#dc2626',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  logoutBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: '#fee2e2',
-    borderRadius: 12,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 32,
-  },
-  statCard: {
-    width: '48%',
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  iconWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#1f2937',
-  },
-  actionsContainer: {
-    gap: 12,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  actionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  actionIconBg: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  actionText: {
-    flex: 1,
-  },
-  actionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: 2,
-  },
-  actionDesc: {
-    fontSize: 13,
-    color: '#6b7280',
-  },
+  container: { flex: 1, backgroundColor: '#f9fafb' },
+  scrollContent: { padding: 20, paddingBottom: 40 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 },
+  title: { fontSize: 28, fontWeight: '900', color: '#dc2626', marginBottom: 4 },
+  subtitle: { fontSize: 14, color: '#6b7280' },
+  logoutBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, backgroundColor: '#fee2e2', borderRadius: 12 },
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 32 },
+  statCard: { width: '48%', backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  iconWrapper: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+  statLabel: { fontSize: 12, color: '#6b7280', marginBottom: 4 },
+  statValue: { fontSize: 18, fontWeight: 'bold', color: '#1f2937' },
+  actionsContainer: { gap: 12 },
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 4 },
+  actionCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', padding: 16, borderRadius: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
+  actionIconBg: { width: 52, height: 52, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+  actionText: { flex: 1 },
+  actionTitle: { fontSize: 16, fontWeight: '700', color: '#1f2937', marginBottom: 2 },
+  actionDesc: { fontSize: 13, color: '#6b7280' },
 });

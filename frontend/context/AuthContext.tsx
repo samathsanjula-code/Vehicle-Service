@@ -3,9 +3,6 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API } from '../constants/api';
 
-// Base URL comes from constants/api.ts — change it there
-const API_URL = API.auth;
-
 type User = {
   id: string;
   fullName: string;
@@ -28,8 +25,35 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading true
   const router = useRouter();
+
+  // Load session on mount
+  useEffect(() => {
+    const loadSession = async () => {
+      try {
+        const storedToken = await AsyncStorage.getItem('token');
+        if (storedToken) {
+          const res = await fetch(`${API.auth}/me`, {
+            headers: { 'Authorization': `Bearer ${storedToken}` }
+          });
+          
+          if (res.ok) {
+            const data = await res.json();
+            setToken(storedToken);
+            setUser(data.user);
+          } else {
+            await AsyncStorage.removeItem('token');
+          }
+        }
+      } catch (e) {
+        console.error("Session load error:", e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadSession();
+  }, []);
 
   const login = async (newToken: string, newUser: User) => {
     setToken(newToken);

@@ -124,6 +124,14 @@ export default function ProfileScreen() {
             <SettingItem icon="person-outline" label="Account Details" />
             <SettingItem icon="calendar-outline" label="My Appointments" onPress={() => router.push('/appointments')} />
             <SettingItem icon="notifications-outline" label="Notifications" />
+            {user.isAdmin && (
+              <SettingItem 
+                icon="shield-checkmark-outline" 
+                label="Admin Panel" 
+                color="#2563eb" 
+                onPress={() => router.replace('/(admin)')} 
+              />
+            )}
             <SettingItem icon="log-out-outline" label="Logout" color="#dc2626" onPress={logout} isLast />
           </View>
         </View>

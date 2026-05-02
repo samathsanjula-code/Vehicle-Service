@@ -151,6 +151,14 @@ export default function ManageVehiclesScreen() {
 
               <View style={styles.cardActions}>
                 <TouchableOpacity 
+                  style={[styles.actionBtn, styles.editBtn]} 
+                  onPress={() => router.push({ pathname: '/add-vehicle', params: { editId: v._id } })}
+                >
+                  <Ionicons name="create-outline" size={18} color="#2563eb" />
+                  <Text style={styles.editBtnText}>Edit Vehicle</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
                   style={[styles.actionBtn, styles.deleteBtn]} 
                   onPress={() => handleDelete(v._id, v.vehicleDetails.regNumber)}
                 >
@@ -271,6 +279,8 @@ const styles = StyleSheet.create({
   },
   deleteBtn: { backgroundColor: '#FEF2F2' },
   deleteBtnText: { color: '#EF4444', fontWeight: '700', fontSize: 14, marginLeft: 8 },
+  editBtn: { backgroundColor: '#EFF6FF', marginBottom: 8 },
+  editBtnText: { color: '#2563eb', fontWeight: '700', fontSize: 14, marginLeft: 8 },
 
   emptyState: { alignItems: 'center', paddingTop: 60 },
   emptyText: { color: '#94A3B8', marginTop: 16, fontSize: 16, fontWeight: '600' },

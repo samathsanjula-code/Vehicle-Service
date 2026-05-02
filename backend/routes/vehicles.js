@@ -31,8 +31,14 @@ router.get("/admin/all", authMiddleware, async (req, res) => {
 // GET a single vehicle by ID
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
-    const vehicle = await Vehicle.findOne({ _id: req.params.id, owner: req.user.id });
-    if (!vehicle) return res.status(404).json({ message: 'Vehicle not found' });
+    // If Admin, don't filter by owner. If regular user, only show their own vehicles.
+    const query = req.user.isAdmin ? { _id: req.params.id } : { _id: req.params.id, owner: req.user.id };
+    
+    const vehicle = await Vehicle.findOne(query).populate("owner", "fullName email phone");
+    
+    if (!vehicle) {
+      return res.status(404).json({ message: 'Vehicle not found' });
+    }
     res.json(vehicle);
   } catch (err) {
     res.status(500).json({ message: 'Server error while fetching vehicle' });
@@ -79,7 +85,8 @@ router.post('/', authMiddleware, async (req, res) => {
 // DELETE a vehicle
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
-    const vehicle = await Vehicle.findOneAndDelete({ _id: req.params.id, owner: req.user.id });
+    const query = req.user.isAdmin ? { _id: req.params.id } : { _id: req.params.id, owner: req.user.id };
+    const vehicle = await Vehicle.findOneAndDelete(query);
     if (!vehicle) return res.status(404).json({ message: 'Vehicle not found' });
     res.json({ message: 'Vehicle removed' });
   } catch (err) {
@@ -91,7 +98,8 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 router.put('/:id', authMiddleware, async (req, res) => {
   try {
     const { customerDetails, vehicleDetails, image, status } = req.body;
-    let vehicle = await Vehicle.findOne({ _id: req.params.id, owner: req.user.id });
+    const query = req.user.isAdmin ? { _id: req.params.id } : { _id: req.params.id, owner: req.user.id };
+    let vehicle = await Vehicle.findOne(query);
     
     if (!vehicle) return res.status(404).json({ message: 'Vehicle not found' });
 
