@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState, useEffect } from 'react';
@@ -45,22 +44,6 @@ const TRANSMISSION_TYPES = [
   { label: 'Automatic', value: 'automatic' },
 ];
 
-const SERVICE_TYPES = [
-  { label: 'General Service', value: 'general' },
-  { label: 'Oil Change', value: 'oil' },
-  { label: 'Engine Repair', value: 'engine' },
-  { label: 'Brake Service', value: 'brake' },
-  { label: 'Tire Replacement', value: 'tire' },
-  { label: 'Full Inspection', value: 'inspection' },
-];
-
-const TIME_SLOTS = [
-  { label: '08:00 AM - 10:00 AM', value: '08-10' },
-  { label: '10:00 AM - 12:00 PM', value: '10-12' },
-  { label: '01:00 PM - 03:00 PM', value: '13-15' },
-  { label: '03:00 PM - 05:00 PM', value: '15-17' },
-];
-
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function AddVehicleScreen() {
@@ -79,11 +62,6 @@ export default function AddVehicleScreen() {
   const [fuelType, setFuelType] = useState<string | null>(null);
   const [transmission, setTransmission] = useState<string | null>(null);
   
-  const [serviceType, setServiceType] = useState<string | null>(null);
-  const [date, setDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [timeSlot, setTimeSlot] = useState<string | null>(null);
-  const [issueDescription, setIssueDescription] = useState('');
   const [images, setImages] = useState<string[]>([]);
 
   const [loading, setLoading] = useState(false);
@@ -111,12 +89,6 @@ export default function AddVehicleScreen() {
             setRegNumber(record.vehicleDetails?.regNumber || '');
             setFuelType(record.vehicleDetails?.fuelType || null);
             setTransmission(record.vehicleDetails?.transmission || null);
-            setServiceType(record.serviceDetails?.serviceType || null);
-            if (record.serviceDetails?.preferredDate) {
-              setDate(new Date(record.serviceDetails.preferredDate));
-            }
-            setTimeSlot(record.serviceDetails?.preferredTimeSlot || null);
-            setIssueDescription(record.serviceDetails?.issueDescription || '');
             setImages(record.image ? [record.image] : []);
           } else {
             console.error('Failed to fetch vehicle:', record.message);
@@ -134,12 +106,6 @@ export default function AddVehicleScreen() {
   }, [editId, token]);
 
   // Handlers
-  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setDate(selectedDate);
-    }
-  };
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -210,12 +176,6 @@ export default function AddVehicleScreen() {
           regNumber,
           fuelType,
           transmission,
-        },
-        serviceDetails: {
-          serviceType,
-          preferredDate: date.toISOString(),
-          preferredTimeSlot: timeSlot,
-          issueDescription,
         },
         image: images.length > 0 ? images[0] : null,
       };
@@ -400,74 +360,6 @@ export default function AddVehicleScreen() {
                   selectedTextStyle={styles.selectedTextStyle}
                 />
               </View>
-            </View>
-          </View>
-
-          {/* Section: Service Details */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="build-outline" size={20} color="#dc2626" />
-              <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>Service Details</ThemedText>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Service Type</Text>
-              <Dropdown
-                style={styles.dropdown}
-                data={SERVICE_TYPES}
-                labelField="label"
-                valueField="value"
-                placeholder="Select Service"
-                value={serviceType}
-                onChange={item => setServiceType(item.value)}
-                placeholderStyle={styles.placeholderStyle}
-                selectedTextStyle={styles.selectedTextStyle}
-              />
-            </View>
-
-            <View style={styles.row}>
-              <View style={[styles.inputGroup, { flex: 1 }]}>
-                <Text style={styles.label}>Preferred Date</Text>
-                <Pressable onPress={() => setShowDatePicker(true)} style={styles.datePickerBtn}>
-                  <Text style={styles.dateText}>{date.toLocaleDateString()}</Text>
-                  <Ionicons name="calendar-outline" size={18} color="#6b7280" />
-                </Pressable>
-                {showDatePicker && (
-                  <DateTimePicker
-                    value={date}
-                    mode="date"
-                    display="default"
-                    minimumDate={new Date()}
-                    onChange={handleDateChange}
-                  />
-                )}
-              </View>
-              <View style={[styles.inputGroup, { flex: 1, marginLeft: 12 }]}>
-                <Text style={styles.label}>Time Slot</Text>
-                <Dropdown
-                  style={styles.dropdown}
-                  data={TIME_SLOTS}
-                  labelField="label"
-                  valueField="value"
-                  placeholder="Select"
-                  value={timeSlot}
-                  onChange={item => setTimeSlot(item.value)}
-                  placeholderStyle={styles.placeholderStyle}
-                  selectedTextStyle={styles.selectedTextStyle}
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Describe the Issue</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="e.g. Strange noise from engine..."
-                multiline
-                numberOfLines={4}
-                value={issueDescription}
-                onChangeText={setIssueDescription}
-              />
             </View>
           </View>
 
