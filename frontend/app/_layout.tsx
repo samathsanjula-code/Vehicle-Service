@@ -7,7 +7,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { AuthProvider } from '../context/AuthContext';
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  anchor: '',
 };
 
 export default function RootLayout() {

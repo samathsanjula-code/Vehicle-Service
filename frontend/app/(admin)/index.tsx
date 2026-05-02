@@ -138,6 +138,20 @@ export default function AdminDashboard() {
 
           <TouchableOpacity 
             style={styles.actionCard} 
+            onPress={() => router.push('/(admin)/manage-bookings')}
+          >
+            <View style={[styles.actionIconBg, { backgroundColor: '#fee2e2' }]}>
+              <Ionicons name="list" size={28} color="#dc2626" />
+            </View>
+            <View style={styles.actionText}>
+              <Text style={styles.actionTitle}>Manage Bookings</Text>
+              <Text style={styles.actionDesc}>View and update all customer appointments</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color="#9ca3af" />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.actionCard} 
             onPress={() => router.push('/(admin)/assign-mechanics')}
           >
             <View style={[styles.actionIconBg, { backgroundColor: '#e0e7ff' }]}>

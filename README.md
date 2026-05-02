@@ -122,7 +122,7 @@ export const BASE_URL = 'http://YOUR_PC_IP:5000';   // e.g. 'http://192.168.1.10
 
 ### Step 4 – Install mobile app dependencies
 
-From the `service/` root folder:
+From the `frontend/` root folder:
 
 ```bash
 npm install

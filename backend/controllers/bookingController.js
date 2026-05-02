@@ -36,8 +36,24 @@ exports.createBooking = async (req, res) => {
 // Get all bookings
 exports.getAllBookings = async (req, res) => {
   try {
-    const bookings = await Booking.find()
-      .populate('customerId', 'fullName email phone');
+    const { date } = req.query;
+    let query = {};
+    
+    if (date) {
+      // Create a date range for the entire day to ensure filtering works regardless of time
+      const startDate = new Date(date);
+      startDate.setUTCHours(0, 0, 0, 0);
+      
+      const endDate = new Date(date);
+      endDate.setUTCHours(23, 59, 59, 999);
+      
+      query.scheduledDate = { $gte: startDate, $lte: endDate };
+    }
+
+    const bookings = await Booking.find(query)
+      .populate('customerId', 'fullName email phone')
+      .sort({ scheduledDate: 1, scheduledTime: 1 });
+      
     res.status(200).json(bookings);
   } catch (error) {
     console.error('Error fetching bookings:', error);
