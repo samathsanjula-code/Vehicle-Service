@@ -190,6 +190,32 @@ export default function HomeScreen() {
             <ThemedText type="title">Welcome!</ThemedText>
             <HelloWave />
           </ThemedView>
+
+        {/* ── Vehicle Management ───────────────────────────────────────────── */}
+        <ThemedView style={styles.section}>
+          <ThemedText type="subtitle" style={styles.sectionTitle}>
+            VEHICLE MANAGEMENT
+          </ThemedText>
+          <View style={styles.vehicleManagementRow}>
+            <Pressable 
+              style={({ pressed }) => [styles.vehicleActionCard, pressed && { opacity: 0.8 }]}
+              onPress={() => router.push('/add-vehicle')}>
+              <View style={[styles.vehicleIconBg, { backgroundColor: '#eff6ff' }]}>
+                <Ionicons name="add-circle" size={24} color="#2563eb" />
+              </View>
+              <Text style={styles.vehicleActionText}>Add Vehicle</Text>
+            </Pressable>
+            
+            <Pressable 
+              style={({ pressed }) => [styles.vehicleActionCard, pressed && { opacity: 0.8 }]}
+              onPress={() => router.push('/service-history')}>
+              <View style={[styles.vehicleIconBg, { backgroundColor: '#f0fdf4' }]}>
+                <Ionicons name="car-sport" size={24} color="#16a34a" />
+              </View>
+              <Text style={styles.vehicleActionText}>My Fleet</Text>
+            </Pressable>
+          </View>
+        </ThemedView>
           <ThemedText style={styles.welcomeSubtext}>
             Professional auto care at your fingertips
           </ThemedText>
@@ -505,6 +531,39 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 1,
     marginBottom: 4,
+  },
+  // Vehicle Management Styles
+  vehicleManagementRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+  },
+  vehicleActionCard: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#f3f4f6',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  vehicleIconBg: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  vehicleActionText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#374151',
   },
   sectionHeader: {
     flexDirection: 'row',
