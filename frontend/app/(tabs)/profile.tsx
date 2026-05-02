@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState, useCallback } from 'react';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -48,10 +48,12 @@ export default function ProfileScreen() {
   if (!user) {
     return (
       <SafeAreaView style={styles.centered}>
-        <Ionicons name="person-circle-outline" size={80} color="#e5e7eb" />
-        <Text style={styles.authTitle}>Guest Mode</Text>
+        <View style={styles.lockIconBox}>
+          <Ionicons name="lock-closed" size={40} color="#dc2626" />
+        </View>
+        <Text style={styles.authTitle}>Sign in to your profile</Text>
         <Pressable style={styles.loginBtn} onPress={() => router.push('/(auth)/login')}>
-          <Text style={styles.loginBtnText}>Sign In</Text>
+          <Text style={styles.loginBtnText}>Log In</Text>
         </Pressable>
       </SafeAreaView>
     );
@@ -61,60 +63,68 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         
-        {/* --- Profile Info --- */}
-        <View style={styles.profileSection}>
+        {/* --- Profile Header --- */}
+        <View style={styles.headerCard}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{user.fullName[0].toUpperCase()}</Text>
           </View>
           <Text style={styles.name}>{user.fullName}</Text>
           <Text style={styles.email}>{user.email.toLowerCase()}</Text>
-          <Pressable style={styles.editBtn}>
-            <Text style={styles.editBtnText}>Edit Profile</Text>
-          </Pressable>
+          <View style={styles.badge}>
+            <Ionicons name="shield-checkmark" size={12} color="#dc2626" />
+            <Text style={styles.badgeText}>VERIFIED OWNER</Text>
+          </View>
         </View>
 
-        {/* --- Garage Section --- */}
-        <View style={styles.section}>
+        <View style={styles.mainContent}>
+          {/* --- Garage Section --- */}
           <Text style={styles.sectionLabel}>My Garage</Text>
-          <View style={styles.row}>
-            <Pressable style={styles.actionCard} onPress={() => router.push('/add-vehicle')}>
-              <View style={[styles.iconBox, { backgroundColor: '#f0f7ff' }]}>
-                <Ionicons name="add" size={24} color="#007bff" />
+          <View style={styles.garageGrid}>
+            <Pressable 
+              style={({ pressed }) => [styles.actionCard, pressed && { opacity: 0.8 }]} 
+              onPress={() => router.push('/add-vehicle')}>
+              <View style={[styles.iconBox, { backgroundColor: '#fef2f2' }]}>
+                <Ionicons name="add-circle" size={26} color="#dc2626" />
               </View>
               <Text style={styles.actionLabel}>Add Vehicle</Text>
+              <Text style={styles.actionSub}>Register new</Text>
             </Pressable>
-            <Pressable style={styles.actionCard} onPress={() => router.push('/service-history')}>
-              <View style={[styles.iconBox, { backgroundColor: '#f0fff4' }]}>
-                <Ionicons name="car" size={24} color="#28a745" />
+            
+            <Pressable 
+              style={({ pressed }) => [styles.actionCard, pressed && { opacity: 0.8 }]} 
+              onPress={() => router.push('/service-history')}>
+              <View style={[styles.iconBox, { backgroundColor: '#fef2f2' }]}>
+                <Ionicons name="car-sport" size={26} color="#dc2626" />
               </View>
               <Text style={styles.actionLabel}>My Fleet</Text>
+              <Text style={styles.actionSub}>Manage cars</Text>
             </Pressable>
           </View>
-        </View>
 
-        {/* --- Loyalty --- */}
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Rewards</Text>
+          {/* --- Loyalty Progress --- */}
           <View style={styles.loyaltyCard}>
-            <View style={styles.loyaltyTop}>
-              <Ionicons name="ribbon" size={20} color="#ffc107" />
-              <Text style={styles.loyaltyText}>Loyalty Points</Text>
-              <Text style={styles.pointsValue}>{loyaltyPoints}</Text>
+            <View style={styles.loyaltyHeader}>
+              <View style={styles.trophyIcon}>
+                <Ionicons name="trophy" size={20} color="#fff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.loyaltyTitle}>Loyalty Program</Text>
+                <Text style={styles.loyaltyPoints}>{loyaltyPoints} Points</Text>
+              </View>
             </View>
-            <View style={styles.progressTrack}>
+            <View style={styles.progressContainer}>
               <View style={[styles.progressFill, { width: `${Math.min((loyaltyPoints/1000)*100, 100)}%` }]} />
             </View>
+            <Text style={styles.progressNote}>{1000 - loyaltyPoints} more points to Silver status</Text>
           </View>
-        </View>
 
-        {/* --- Settings --- */}
-        <View style={styles.section}>
+          {/* --- Settings List --- */}
           <Text style={styles.sectionLabel}>Settings</Text>
-          <View style={styles.settingsGroup}>
+          <View style={styles.settingsContainer}>
+            <SettingItem icon="person-outline" label="Account Details" />
             <SettingItem icon="calendar-outline" label="My Appointments" onPress={() => router.push('/appointments')} />
             <SettingItem icon="notifications-outline" label="Notifications" />
-            <SettingItem icon="help-circle-outline" label="Help & Support" />
-            <SettingItem icon="log-out-outline" label="Logout" color="#dc3545" onPress={logout} isLast />
+            <SettingItem icon="log-out-outline" label="Logout" color="#dc2626" onPress={logout} isLast />
           </View>
         </View>
 
@@ -123,48 +133,109 @@ export default function ProfileScreen() {
   );
 }
 
-function SettingItem({ icon, label, color = "#4b5563", onPress, isLast }: any) {
+function SettingItem({ icon, label, color = "#1f2937", onPress, isLast }: any) {
   return (
     <Pressable style={[styles.settingItem, isLast && { borderBottomWidth: 0 }]} onPress={onPress}>
-      <Ionicons name={icon} size={20} color={color} />
+      <View style={styles.settingIconBg}>
+        <Ionicons name={icon} size={20} color={color} />
+      </View>
       <Text style={[styles.settingLabel, { color }]}>{label}</Text>
-      <Ionicons name="chevron-forward" size={16} color="#d1d5db" />
+      <Ionicons name="chevron-forward" size={18} color="#d1d5db" />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#fff' },
+  safeArea: { flex: 1, backgroundColor: '#f8fafc' },
   scrollContent: { paddingBottom: 40 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff', padding: 40 },
   
-  profileSection: { alignItems: 'center', paddingVertical: 40 },
-  avatar: { width: 90, height: 90, borderRadius: 45, backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  avatarText: { fontSize: 32, fontWeight: '700', color: '#111827' },
-  name: { fontSize: 22, fontWeight: '700', color: '#111827', marginBottom: 4 },
-  email: { fontSize: 14, color: '#6b7280', marginBottom: 20 },
-  editBtn: { paddingHorizontal: 20, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#e5e7eb' },
-  editBtnText: { fontSize: 13, fontWeight: '600', color: '#374151' },
+  headerCard: { 
+    backgroundColor: '#fff', 
+    alignItems: 'center', 
+    paddingTop: 40, 
+    paddingBottom: 30,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  avatar: { 
+    width: 88, 
+    height: 88, 
+    borderRadius: 44, 
+    backgroundColor: '#dc2626', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    marginBottom: 16,
+    shadowColor: '#dc2626',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+  },
+  avatarText: { fontSize: 36, fontWeight: '900', color: '#fff' },
+  name: { fontSize: 24, fontWeight: '800', color: '#111827', marginBottom: 4 },
+  email: { fontSize: 14, color: '#64748b', marginBottom: 12 },
+  badge: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 6, 
+    backgroundColor: '#fef2f2', 
+    paddingHorizontal: 12, 
+    paddingVertical: 6, 
+    borderRadius: 20 
+  },
+  badgeText: { fontSize: 10, fontWeight: '800', color: '#dc2626', letterSpacing: 0.5 },
 
-  section: { paddingHorizontal: 24, marginBottom: 32 },
-  sectionLabel: { fontSize: 12, fontWeight: '700', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 },
-  row: { flexDirection: 'row', gap: 16 },
-  actionCard: { flex: 1, backgroundColor: '#fff', borderRadius: 16, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: '#f3f4f6' },
-  iconBox: { width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  actionLabel: { fontSize: 14, fontWeight: '600', color: '#111827' },
+  mainContent: { padding: 24 },
+  sectionLabel: { fontSize: 13, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16, marginLeft: 4 },
+  
+  garageGrid: { flexDirection: 'row', gap: 16, marginBottom: 32 },
+  actionCard: { 
+    flex: 1, 
+    backgroundColor: '#fff', 
+    borderRadius: 24, 
+    padding: 20, 
+    borderWidth: 1, 
+    borderColor: '#f1f5f9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  iconBox: { width: 50, height: 50, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  actionLabel: { fontSize: 15, fontWeight: '800', color: '#1e293b' },
+  actionSub: { fontSize: 12, color: '#94a3b8', marginTop: 2 },
 
-  loyaltyCard: { backgroundColor: '#f9fafb', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: '#f3f4f6' },
-  loyaltyTop: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  loyaltyText: { flex: 1, fontSize: 15, fontWeight: '600', color: '#111827', marginLeft: 8 },
-  pointsValue: { fontSize: 18, fontWeight: '700', color: '#111827' },
-  progressTrack: { height: 6, backgroundColor: '#e5e7eb', borderRadius: 3 },
-  progressFill: { height: '100%', backgroundColor: '#ffc107', borderRadius: 3 },
+  loyaltyCard: { 
+    backgroundColor: '#1e293b', 
+    borderRadius: 24, 
+    padding: 24, 
+    marginBottom: 32,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+  },
+  loyaltyHeader: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 20 },
+  trophyIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#dc2626', alignItems: 'center', justifyContent: 'center' },
+  loyaltyTitle: { color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
+  loyaltyPoints: { color: '#fff', fontSize: 22, fontWeight: '900' },
+  progressContainer: { height: 8, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 4, overflow: 'hidden' },
+  progressFill: { height: '100%', backgroundColor: '#dc2626' },
+  progressNote: { color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 10, fontWeight: '500' },
 
-  settingsGroup: { backgroundColor: '#fff', borderRadius: 16, borderWeight: 1, borderColor: '#f3f4f6', overflow: 'hidden' },
-  settingItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f9fafb' },
-  settingLabel: { flex: 1, fontSize: 15, fontWeight: '500', marginLeft: 16 },
+  settingsContainer: { backgroundColor: '#fff', borderRadius: 24, padding: 8, borderWidth: 1, borderColor: '#f1f5f9' },
+  settingItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  settingIconBg: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center', marginRight: 16 },
+  settingLabel: { flex: 1, fontSize: 15, fontWeight: '600' },
 
-  authTitle: { fontSize: 18, fontWeight: '600', color: '#4b5563', marginBottom: 24 },
-  loginBtn: { backgroundColor: '#111827', paddingHorizontal: 40, paddingVertical: 14, borderRadius: 12 },
-  loginBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  lockIconBox: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#fef2f2', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  authTitle: { fontSize: 18, fontWeight: '800', color: '#1e293b', marginBottom: 24 },
+  loginBtn: { backgroundColor: '#dc2626', paddingHorizontal: 48, paddingVertical: 16, borderRadius: 16 },
+  loginBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
 });
