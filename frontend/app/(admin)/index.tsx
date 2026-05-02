@@ -4,33 +4,53 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
+import { API, BOOKINGS_URL } from '../../constants/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function AdminDashboard() {
   const router = useRouter();
   const { logout, token } = useAuth();
-  const [stats, setStats] = useState({ total: 0, available: 0, busy: 0 });
+  const [stats, setStats] = useState({ total: 0, available: 0, busy: 0, revenueToday: 0 });
 
   useFocusEffect(
     useCallback(() => {
       // Fetch mechanics for stats
-      const fetchMechanics = async () => {
+      const fetchDashboardData = async () => {
         try {
-          const res = await fetch('http://192.168.1.100:5005/api/mechanics', { // UPDATE IP TO YOURS
-            headers: { Authorization: `Bearer ${token}` }
+          const tokenStr = token || await AsyncStorage.getItem('token');
+          
+          // Fetch mechanics
+          const mechRes = await fetch(API.mechanics, {
+            headers: { Authorization: `Bearer ${tokenStr}` }
           });
-          if (res.ok) {
-            const data = await res.json();
-            setStats({
-              total: data.length,
-              available: data.filter((m: any) => m.availability === 'Available').length,
-              busy: data.filter((m: any) => m.availability === 'Busy').length,
-            });
-          }
+          let mechanicsData = [];
+          if (mechRes.ok) mechanicsData = await mechRes.json();
+
+          // Fetch bookings for revenue
+          const bookRes = await fetch(BOOKINGS_URL, {
+            headers: { Authorization: `Bearer ${tokenStr}` }
+          });
+          let bookingsData = [];
+          if (bookRes.ok) bookingsData = await bookRes.json();
+
+          // Calculate today's revenue
+          const today = new Date().toISOString().split('T')[0];
+          const todaysBookings = bookingsData.filter((b: any) => 
+            b.scheduledDate && b.scheduledDate.startsWith(today) && b.status !== 'Cancelled'
+          );
+          const revenueToday = todaysBookings.reduce((sum: number, b: any) => sum + (b.price || 0), 0);
+
+          setStats({
+            total: mechanicsData.length,
+            available: mechanicsData.filter((m: any) => m.availability === 'Available').length,
+            busy: mechanicsData.filter((m: any) => m.availability === 'Busy').length,
+            revenueToday
+          });
         } catch (e) {
-          console.log(e);
+          console.error('Failed to load dashboard data:', e);
         }
       };
-      fetchMechanics();
+      fetchDashboardData();
     }, [token])
   );
 
@@ -80,7 +100,7 @@ export default function AdminDashboard() {
               <Ionicons name="cash" size={24} color="#4f46e5" />
             </View>
             <Text style={styles.statLabel}>Revenue Today</Text>
-            <Text style={styles.statValue}>LKR 125K</Text>
+            <Text style={styles.statValue}>LKR {stats.revenueToday}</Text>
           </View>
         </View>
 
@@ -140,6 +160,34 @@ export default function AdminDashboard() {
             <View style={styles.actionText}>
               <Text style={styles.actionTitle}>Manage Vehicles</Text>
               <Text style={styles.actionDesc}>View and manage all registered vehicles</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color="#9ca3af" />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.actionCard} 
+            onPress={() => router.push('/(admin)/add-service')}
+          >
+            <View style={[styles.actionIconBg, { backgroundColor: '#fce7f3' }]}>
+              <Ionicons name="add-circle" size={28} color="#db2777" />
+            </View>
+            <View style={styles.actionText}>
+              <Text style={styles.actionTitle}>Add Services</Text>
+              <Text style={styles.actionDesc}>Create a new vehicle service offering</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color="#9ca3af" />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.actionCard} 
+            onPress={() => router.push('/(admin)/manage-services')}
+          >
+            <View style={[styles.actionIconBg, { backgroundColor: '#dcfce7' }]}>
+              <Ionicons name="construct" size={28} color="#16a34a" />
+            </View>
+            <View style={styles.actionText}>
+              <Text style={styles.actionTitle}>Manage Services</Text>
+              <Text style={styles.actionDesc}>View, edit, or delete existing services</Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color="#9ca3af" />
           </TouchableOpacity>
