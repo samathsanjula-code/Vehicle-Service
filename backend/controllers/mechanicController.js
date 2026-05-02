@@ -1,89 +1,90 @@
-const Mechanic = require("../models/Mechanic");
+const Mechanic = require('../models/Mechanic');
 
 // Get all mechanics
-const getAllMechanics = async (req, res) => {
+exports.getAllMechanics = async (req, res) => {
   try {
-    const mechanics = await Mechanic.find();
-    res.json(mechanics);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server Error");
+    const mechanics = await Mechanic.find().sort({ createdAt: -1 });
+    res.status(200).json(mechanics);
+  } catch (error) {
+    console.error('Error fetching mechanics:', error);
+    res.status(500).json({ message: 'Failed to fetch mechanics' });
   }
 };
 
 // Create a new mechanic
-const createMechanic = async (req, res) => {
+exports.createMechanic = async (req, res) => {
   try {
-    const { fullName, specialty, phone, experience, status } = req.body;
+    const { name, specialization, phone, experience, availability, level } = req.body;
+    
+    // Validate required fields
+    if (!name || !specialization || !phone || !experience) {
+      return res.status(400).json({ message: 'Please provide all required fields' });
+    }
 
-    const newMechanic = new Mechanic({
-      fullName,
-      specialty,
+    const newMechanic = await Mechanic.create({
+      name,
+      specialization,
       phone,
       experience,
-      status: status || "Available",
+      availability: availability || 'Available',
+      level: level || 'Junior'
     });
-
-    const mechanic = await newMechanic.save();
-    res.status(201).json(mechanic);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server Error");
+    
+    res.status(201).json(newMechanic);
+  } catch (error) {
+    console.error('Error creating mechanic:', error);
+    res.status(400).json({ message: error.message || 'Failed to create mechanic' });
   }
 };
 
 // Get mechanic by ID
-const getMechanicById = async (req, res) => {
+exports.getMechanicById = async (req, res) => {
   try {
     const mechanic = await Mechanic.findById(req.params.id);
-    if (!mechanic) return res.status(404).json({ msg: "Mechanic not found" });
-    res.json(mechanic);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server Error");
+      
+    if (!mechanic) {
+      return res.status(404).json({ message: 'Mechanic not found' });
+    }
+    
+    res.status(200).json(mechanic);
+  } catch (error) {
+    console.error('Error fetching mechanic:', error);
+    res.status(500).json({ message: 'Failed to fetch mechanic' });
   }
 };
 
 // Update mechanic
-const updateMechanic = async (req, res) => {
+exports.updateMechanic = async (req, res) => {
   try {
-    const { fullName, specialty, phone, experience, status } = req.body;
-    let mechanic = await Mechanic.findById(req.params.id);
-
-    if (!mechanic) return res.status(404).json({ msg: "Mechanic not found" });
-
-    mechanic.fullName = fullName || mechanic.fullName;
-    mechanic.specialty = specialty || mechanic.specialty;
-    mechanic.phone = phone || mechanic.phone;
-    mechanic.experience = experience || mechanic.experience;
-    mechanic.status = status || mechanic.status;
-
-    await mechanic.save();
-    res.json(mechanic);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server Error");
+    const mechanic = await Mechanic.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+    
+    if (!mechanic) {
+      return res.status(404).json({ message: 'Mechanic not found' });
+    }
+    
+    res.status(200).json(mechanic);
+  } catch (error) {
+    console.error('Error updating mechanic:', error);
+    res.status(400).json({ message: error.message || 'Failed to update mechanic' });
   }
 };
 
 // Delete mechanic
-const deleteMechanic = async (req, res) => {
+exports.deleteMechanic = async (req, res) => {
   try {
-    const mechanic = await Mechanic.findById(req.params.id);
-    if (!mechanic) return res.status(404).json({ msg: "Mechanic not found" });
-
-    await mechanic.deleteOne();
-    res.json({ msg: "Mechanic removed" });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server Error");
+    const mechanic = await Mechanic.findByIdAndDelete(req.params.id);
+    
+    if (!mechanic) {
+      return res.status(404).json({ message: 'Mechanic not found' });
+    }
+    
+    res.status(200).json({ message: 'Mechanic deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting mechanic:', error);
+    res.status(500).json({ message: 'Failed to delete mechanic' });
   }
-};
-
-module.exports = {
-  getAllMechanics,
-  createMechanic,
-  getMechanicById,
-  updateMechanic,
-  deleteMechanic,
 };
