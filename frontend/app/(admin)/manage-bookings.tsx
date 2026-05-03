@@ -25,6 +25,7 @@ export default function ManageBookings() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
 
   const fetchBookings = useCallback(
     async (date?: Date) => {
@@ -190,7 +191,14 @@ export default function ManageBookings() {
         </View>
 
         <View style={styles.actionRow}>
-          {canComplete && (
+          <TouchableOpacity
+            style={[styles.actionButton, styles.viewBtn]}
+            onPress={() => setSelectedBooking(item)}
+          >
+            <Text style={styles.actionButtonText}>View Details</Text>
+          </TouchableOpacity>
+
+          {canComplete ? (
             <TouchableOpacity
               style={[
                 styles.actionButton,
@@ -202,14 +210,14 @@ export default function ManageBookings() {
             >
               <Text style={styles.actionButtonText}>Service Done</Text>
             </TouchableOpacity>
-          )}
-
-          {!canComplete && (
-            <Text style={styles.noActionText}>
-              {item.status === "Completed"
-                ? "Service Completed"
-                : "Booking Cancelled"}
-            </Text>
+          ) : (
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+              <Text style={styles.noActionText}>
+                {item.status === "Completed"
+                  ? "Service Completed"
+                  : "Cancelled"}
+              </Text>
+            </View>
           )}
         </View>
       </View>
@@ -234,6 +242,72 @@ export default function ManageBookings() {
         return "#f3f4f6";
     }
   };
+
+  if (selectedBooking) {
+    return (
+      <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => setSelectedBooking(null)}>
+            <Ionicons name="arrow-back" size={24} color="#1f2937" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Review Summary</Text>
+        </View>
+        <View style={{ padding: 20 }}>
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryLabel}>Booking ID</Text>
+            <Text style={styles.summaryValue}>#{selectedBooking._id.slice(-6).toUpperCase()}</Text>
+
+            <Text style={styles.summaryLabel}>Customer</Text>
+            <Text style={styles.summaryValue}>{selectedBooking.customerId?.fullName || "N/A"}</Text>
+            
+            <Text style={styles.summaryLabel}>Phone</Text>
+            <Text style={styles.summaryValue}>{selectedBooking.customerId?.phone || "N/A"}</Text>
+            
+            <Text style={styles.summaryLabel}>Vehicle</Text>
+            <Text style={styles.summaryValue}>
+              {selectedBooking.vehicleId && typeof selectedBooking.vehicleId === "object" && selectedBooking.vehicleId.make
+                ? `${selectedBooking.vehicleId.make} ${selectedBooking.vehicleId.model} (${selectedBooking.vehicleId.licensePlate})`
+                : selectedBooking.vehicleId
+                  ? `ID: ...${String(selectedBooking.vehicleId).slice(-6)}`
+                  : "N/A"}
+            </Text>
+
+            <Text style={styles.summaryLabel}>Services</Text>
+            <Text style={styles.summaryValue}>
+              {Array.isArray(selectedBooking.serviceType)
+                ? selectedBooking.serviceType.join(", ")
+                : selectedBooking.serviceType}
+            </Text>
+
+            <Text style={styles.summaryLabel}>Date & Time</Text>
+            <Text style={styles.summaryValue}>
+              {selectedBooking.scheduledDate
+                ? new Date(selectedBooking.scheduledDate).toDateString()
+                : "Date TBD"}{" "}
+              - {selectedBooking.scheduledTime}
+            </Text>
+
+            {selectedBooking.notes && (
+              <>
+                <Text style={styles.summaryLabel}>Notes</Text>
+                <Text style={styles.summaryValue}>{selectedBooking.notes}</Text>
+              </>
+            )}
+
+            <Text style={styles.summaryLabel}>Total Amount</Text>
+            <Text style={[styles.summaryValue, { color: '#c0392b' }]}>
+              LKR {selectedBooking.price}
+            </Text>
+            
+            <Text style={styles.summaryLabel}>Status</Text>
+            <Text style={styles.summaryValue}>
+              {selectedBooking.status}
+            </Text>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
@@ -431,6 +505,32 @@ const styles = StyleSheet.create({
   },
   completeBtn: {
     backgroundColor: "#4f46e5",
+  },
+  viewBtn: {
+    backgroundColor: "#4b5563",
+  },
+  summaryCard: { 
+    backgroundColor: '#fff', 
+    padding: 20, 
+    borderRadius: 12, 
+    borderWidth: 1, 
+    borderColor: '#e0e0e0',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  summaryLabel: { 
+    fontSize: 14, 
+    color: '#7f8c8d', 
+    marginBottom: 4, 
+    marginTop: 12 
+  },
+  summaryValue: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: '#0d0d0f' 
   },
   noActionText: {
     fontSize: 12,
