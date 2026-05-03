@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { useState } from 'react';
 import { BOOKINGS_URL } from '../constants/api';
 
 export interface Booking {

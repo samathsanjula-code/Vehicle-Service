@@ -1,12 +1,12 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Platform, FlatList } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useAuth } from '../../context/AuthContext';
-import { BOOKINGS_URL } from '../../constants/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BOOKINGS_URL } from '../../constants/api';
+import { useAuth } from '../../context/AuthContext';
 
 export default function ManageBookings() {
   const router = useRouter();
@@ -83,15 +83,16 @@ export default function ManageBookings() {
   };
 
   const renderBookingItem = ({ item }: { item: any }) => {
-    const isPendingPayment = item.status === 'Pending' || item.status === 'Pending Payment';
-    const canComplete = item.status === 'Confirmed' || item.status === 'Assigned';
+    const canComplete = item.status !== 'Completed' && item.status !== 'Cancelled';
 
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <View>
             <Text style={styles.bookingId}>#{item._id.slice(-6).toUpperCase()}</Text>
-            <Text style={styles.timeText}>{item.scheduledTime}</Text>
+            <Text style={styles.timeText}>
+              {item.scheduledDate ? new Date(item.scheduledDate).toLocaleDateString() : 'Date TBD'} - {item.scheduledTime}
+            </Text>
           </View>
           <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
             <Text style={styles.statusBadgeText}>{item.status}</Text>
@@ -142,16 +143,6 @@ export default function ManageBookings() {
         </View>
 
         <View style={styles.actionRow}>
-          {isPendingPayment && (
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.paymentBtn, updatingId === item._id && { opacity: 0.5 }]} 
-              onPress={() => updateBookingStatus(item._id, 'Confirmed')}
-              disabled={updatingId === item._id}
-            >
-              <Text style={styles.actionButtonText}>Payment Done</Text>
-            </TouchableOpacity>
-          )}
-          
           {canComplete && (
             <TouchableOpacity 
               style={[styles.actionButton, styles.completeBtn, updatingId === item._id && { opacity: 0.5 }]} 
@@ -162,8 +153,10 @@ export default function ManageBookings() {
             </TouchableOpacity>
           )}
 
-          {!isPendingPayment && !canComplete && item.status !== 'Cancelled' && (
-            <Text style={styles.noActionText}>No actions available</Text>
+          {!canComplete && (
+            <Text style={styles.noActionText}>
+              {item.status === 'Completed' ? 'Service Completed' : 'Booking Cancelled'}
+            </Text>
           )}
         </View>
       </View>
