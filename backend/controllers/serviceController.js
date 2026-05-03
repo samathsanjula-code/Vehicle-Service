@@ -53,7 +53,12 @@ const updateService = async (req, res) => {
     if (name) service.name = name;
     if (category) service.category = category;
     if (price) service.price = price;
-    if (discountPrice !== undefined) service.discountPrice = discountPrice;
+    
+    // Explicitly handle discountPrice to allow clearing it (null or undefined)
+    if (req.body.hasOwnProperty('discountPrice')) {
+      service.discountPrice = (discountPrice === '' || discountPrice === null) ? undefined : discountPrice;
+    }
+
     if (description) service.description = description;
     if (features) service.features = features;
     if (icon) service.icon = icon;

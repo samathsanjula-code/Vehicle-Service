@@ -6,8 +6,8 @@
 
 const PRODUCTION_URL =
   process.env.EXPO_PUBLIC_PRODUCTION_URL ||
-  "https://vehicle-service-1-9z14.onrender.com";
-const DEFAULT_LOCAL_URL = 'http://192.168.1.5:5000';
+  "https://vehicle-service-2.onrender.com";
+const DEFAULT_LOCAL_URL = "http://192.168.1.5:5000";
 
 // Auto-switch: Use local IP in development, Render URL in production
 export const BASE_URL = __DEV__

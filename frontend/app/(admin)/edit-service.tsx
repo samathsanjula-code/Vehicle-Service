@@ -142,7 +142,7 @@ export default function EditServiceScreen() {
           name: serviceName,
           category: category,
           price: parseFloat(price) || 0,
-          discountPrice: discountPrice ? parseFloat(discountPrice) : undefined,
+          discountPrice: (discountPrice && discountPrice.trim() !== '') ? parseFloat(discountPrice) : null,
           description: description,
           features: newFeaturesArray,
           icon: CATEGORIES.find(c => c.name === category)?.icon || 'sparkles-outline',
