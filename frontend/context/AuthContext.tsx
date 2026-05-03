@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API } from '../constants/api';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { API } from "../constants/api";
 
 type User = {
   id: string;
@@ -32,18 +32,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const loadSession = async () => {
       try {
-        const storedToken = await AsyncStorage.getItem('token');
+        const storedToken = await AsyncStorage.getItem("token");
         if (storedToken) {
           const res = await fetch(`${API.auth}/me`, {
-            headers: { 'Authorization': `Bearer ${storedToken}` }
+            headers: { Authorization: `Bearer ${storedToken}` },
           });
-          
+
           if (res.ok) {
             const data = await res.json();
             setToken(storedToken);
             setUser(data.user);
           } else {
-            await AsyncStorage.removeItem('token');
+            await AsyncStorage.removeItem("token");
           }
         }
       } catch (e) {
@@ -58,14 +58,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (newToken: string, newUser: User) => {
     setToken(newToken);
     setUser(newUser);
-    await AsyncStorage.setItem('token', newToken);
+    await AsyncStorage.setItem("token", newToken);
   };
 
   const logout = async () => {
     setToken(null);
     setUser(null);
-    await AsyncStorage.removeItem('token');
-    router.replace('/(auth)/login');
+    await AsyncStorage.removeItem("token");
+    router.replace("/(auth)/login");
   };
 
   return (
@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
