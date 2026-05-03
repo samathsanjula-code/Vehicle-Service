@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "service",
-    "slug": "service",
+    "name": "Moto-Hub",
+    "slug": "Moto-Hub",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "service",
+    "icon": "./assets/images/FF1.jpg",
+    "scheme": "moto-hub",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
