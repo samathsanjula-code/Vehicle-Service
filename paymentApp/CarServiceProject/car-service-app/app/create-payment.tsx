@@ -89,7 +89,7 @@ export default function CreatePaymentScreen() {
       router.replace("/(tabs)/payments");
     } catch (error: any) {
       const errorMsg =
-        error?.response?.data?.error ||
+        (error as any).friendlyMessage ||
         error?.response?.data?.message ||
         error.message ||
         "Network Error: Cannot reach server";

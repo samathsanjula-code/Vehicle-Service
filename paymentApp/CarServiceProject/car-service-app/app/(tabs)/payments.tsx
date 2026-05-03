@@ -32,12 +32,14 @@ export default function PaymentsScreen() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [fetchError, setFetchError] = useState("");
   const [search, setSearch] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<"All" | "Paid" | "Pending">("All");
 
   const fetchPayments = async (showLoader = true, nextStatus?: "All" | "Paid" | "Pending") => {
     try {
       if (showLoader) setLoading(true);
+      setFetchError("");
 
       const statusToUse = nextStatus ?? selectedStatus;
       const params: Record<string, string> = {};
@@ -48,7 +50,11 @@ export default function PaymentsScreen() {
       const res = await getAllPayments(params);
       setPayments(res?.data?.data || []);
     } catch (error: any) {
-      Alert.alert("Error", error?.response?.data?.message || "Failed to fetch payments");
+      const msg =
+        (error as any).friendlyMessage ||
+        error?.response?.data?.message ||
+        "Failed to fetch payments.";
+      setFetchError(msg);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -78,7 +84,11 @@ export default function PaymentsScreen() {
       Alert.alert("Success", `Payment marked as ${status}`);
       await fetchPayments(false);
     } catch (error: any) {
-      Alert.alert("Error", error?.response?.data?.message || "Failed to update payment");
+      const msg =
+        (error as any).friendlyMessage ||
+        error?.response?.data?.message ||
+        "Failed to update payment.";
+      Alert.alert("Error", msg);
     }
   };
 
@@ -88,12 +98,12 @@ export default function PaymentsScreen() {
       setPayments((prev) => prev.filter((p) => p._id !== id));
       Alert.alert("Success", "Payment deleted successfully");
     } catch (error: any) {
-      const errorMsg =
-        error?.response?.data?.error ||
+      const msg =
+        (error as any).friendlyMessage ||
         error?.response?.data?.message ||
         error.message ||
         "Network Error: Cannot reach server";
-      Alert.alert("Error", errorMsg);
+      Alert.alert("Error", msg);
     }
   };
 
@@ -290,6 +300,21 @@ export default function PaymentsScreen() {
             <View className="mt-12 items-center">
               <ActivityIndicator size="large" color="#2563eb" />
               <Text className="mt-3 text-slate-500">Loading payments...</Text>
+            </View>
+          ) : fetchError ? (
+            <View className="mt-10 rounded-3xl bg-white p-6">
+              <Text className="text-center text-xl font-bold text-rose-600">
+                Connection Error
+              </Text>
+              <Text className="mt-2 text-center leading-6 text-slate-500">
+                {fetchError}
+              </Text>
+              <TouchableOpacity
+                onPress={() => fetchPayments(true)}
+                className="mt-5 rounded-2xl bg-blue-600 py-4"
+              >
+                <Text className="text-center font-bold text-white">Retry</Text>
+              </TouchableOpacity>
             </View>
           ) : (
             <View className="mt-10 rounded-3xl bg-white p-6">
