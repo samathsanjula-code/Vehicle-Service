@@ -7,7 +7,6 @@
     "icon": "./assets/images/FF1.jpg",
     "scheme": "moto-hub",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true
     },
@@ -20,7 +19,10 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.MotoHub"
+      "package": "com.anonymous.MotoHub",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "output": "static",
@@ -38,12 +40,17 @@
         }
       ],
       "expo-web-browser",
-      "expo-image-picker",
-      "@react-native-community/datetimepicker"
+      "expo-image-picker"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": false
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d3a276cc-84cd-4925-9b56-3ab29027e6a1"
+      }
     }
   }
 }
