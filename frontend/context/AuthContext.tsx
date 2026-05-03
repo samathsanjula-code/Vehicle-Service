@@ -34,20 +34,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const storedToken = await AsyncStorage.getItem("token");
         if (storedToken) {
+          // Add a 5s timeout to prevent infinite loading if backend is unreachable
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
+
           const res = await fetch(`${API.auth}/me`, {
             headers: { Authorization: `Bearer ${storedToken}` },
-          });
+            signal: controller.signal
+          }).finally(() => clearTimeout(timeoutId));
 
           if (res.ok) {
             const data = await res.json();
             setToken(storedToken);
-            setUser(data.user);
+            setUser(data.user); // Take the nested user object
           } else {
+            console.warn("Session invalid, clearing token");
             await AsyncStorage.removeItem("token");
           }
         }
-      } catch (e) {
-        console.error("Session load error:", e);
+      } catch (e: any) {
+        if (e.name === 'AbortError') {
+          console.error("Auth request timed out. Check if backend is running and IP is correct.");
+        } else {
+          console.error("Session load error:", e);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -62,9 +72,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
+    // Clear state first to stop background fetches
     setToken(null);
     setUser(null);
+    
+    // Clear storage
     await AsyncStorage.removeItem("token");
+    
+    // Redirect to login immediately
     router.replace("/(auth)/login");
   };
 

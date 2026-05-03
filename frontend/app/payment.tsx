@@ -1,17 +1,58 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Alert, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { API, BOOKINGS_URL } from '../constants/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function PaymentScreen() {
   const params = useLocalSearchParams();
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const bookingId = typeof params.bookingId === 'string' ? params.bookingId : undefined;
   const serviceType = typeof params.serviceType === 'string' ? params.serviceType : 'Unknown';
   const scheduledDate = typeof params.scheduledDate === 'string' ? params.scheduledDate : 'Unknown';
   const scheduledTime = typeof params.scheduledTime === 'string' ? params.scheduledTime : 'Unknown';
   const totalAmount = typeof params.totalAmount === 'string' ? params.totalAmount : '0.00';
 
+  const handlePayment = async () => {
+    if (!bookingId) {
+      Alert.alert('Error', 'Invalid Booking ID');
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await fetch(`${BOOKINGS_URL}/${bookingId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: 'Paid' })
+      });
+
+      if (response.ok) {
+        console.log("✅ Booking status updated to 'Paid' successfully");
+        Alert.alert('Success', 'Payment successful! Your appointment is now confirmed.', [
+          { text: 'OK', onPress: () => router.replace('/(tabs)/appointments') }
+        ]);
+      } else {
+        const errorData = await response.json();
+        console.error("❌ Payment update failed:", errorData);
+        Alert.alert('Error', errorData.message || 'Payment failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Payment Error:', error);
+      Alert.alert('Error', 'Connection failed. Please check your network.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Payment</Text>
+      <Text style={styles.title}>Payment Confirmation</Text>
       <View style={styles.card}>
         <Text style={styles.label}>Booking ID</Text>
         <Text style={styles.value}>{bookingId ?? 'N/A'}</Text>
@@ -19,25 +60,35 @@ export default function PaymentScreen() {
         <Text style={styles.label}>Services</Text>
         <Text style={styles.value}>{serviceType}</Text>
 
-        <Text style={styles.label}>Date</Text>
-        <Text style={styles.value}>{new Date(scheduledDate).toDateString()}</Text>
-
-        <Text style={styles.label}>Time</Text>
-        <Text style={styles.value}>{scheduledTime}</Text>
+        <Text style={styles.label}>Date & Time</Text>
+        <Text style={styles.value}>{new Date(scheduledDate).toDateString()} at {scheduledTime}</Text>
 
         <Text style={styles.label}>Total Amount</Text>
-        <Text style={styles.value}>LKR {Number(totalAmount).toFixed(2)}</Text>
+        <Text style={styles.value}>LKR {Number(totalAmount).toLocaleString()}</Text>
       </View>
 
       <Text style={styles.note}>
-        This is a placeholder payment screen. Payment integration is not implemented yet.
+        This is a simulated payment screen. Clicking "Confirm & Pay" will mark your booking as Confirmed.
       </Text>
 
       <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.replace('/booking')}
+        style={[styles.button, isProcessing && { backgroundColor: '#95a5a6' }]}
+        onPress={handlePayment}
+        disabled={isProcessing}
       >
-        <Text style={styles.buttonText}>Return to Upcoming</Text>
+        {isProcessing ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Confirm & Pay Now</Text>
+        )}
+      </TouchableOpacity>
+      
+      <TouchableOpacity
+        style={styles.cancelButton}
+        onPress={() => router.back()}
+        disabled={isProcessing}
+      >
+        <Text style={styles.cancelButtonText}>Cancel</Text>
       </TouchableOpacity>
     </View>
   );
@@ -81,14 +132,27 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   button: {
-    backgroundColor: '#c0392b',
+    backgroundColor: '#dc2626',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
+    marginBottom: 12,
   },
   buttonText: {
     color: '#fff',
     fontWeight: 'bold',
+    fontSize: 16,
+  },
+  cancelButton: {
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+  },
+  cancelButtonText: {
+    color: '#4b5563',
+    fontWeight: '600',
     fontSize: 16,
   },
 });

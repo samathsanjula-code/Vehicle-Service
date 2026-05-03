@@ -2,17 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useBookings, Booking } from '../../hooks/useBookings';
+import { useAuth } from '../../context/AuthContext';
 
 export default function BookingDetailScreen() {
   const { id } = useLocalSearchParams();
   const { fetchBookingById, deleteBooking, loading } = useBookings();
   const [booking, setBooking] = useState<Booking | null>(null);
 
+  const { user } = useAuth();
+
   useEffect(() => {
-    if (id && typeof id === 'string') {
+    if (user && id && typeof id === 'string') {
       loadBooking(id);
     }
-  }, [id]);
+  }, [id, user]);
 
   const loadBooking = async (bookingId: string) => {
     try {
@@ -39,7 +42,7 @@ export default function BookingDetailScreen() {
               try {
                 await deleteBooking(id);
                 Alert.alert('Success', 'Appointment cancelled successfully');
-                router.replace('/booking');
+                router.replace('/appointments');
               } catch (err) {
                 // Handled in hook
               }
