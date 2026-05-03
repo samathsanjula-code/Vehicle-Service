@@ -22,20 +22,18 @@ export default function ManageBookings() {
   const { token } = useAuth();
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
 
   const fetchBookings = useCallback(
-    async (date?: Date) => {
+    async () => {
       try {
         setLoading(true);
         const tokenStr = token || (await AsyncStorage.getItem("token"));
-        const dateToFetch = date || selectedDate;
-        const dateString = dateToFetch.toISOString().split("T")[0];
 
-        const res = await fetch(`${BOOKINGS_URL}?date=${dateString}`, {
+        const res = await fetch(BOOKINGS_URL, {
           headers: { Authorization: `Bearer ${tokenStr}` },
         });
 
@@ -52,7 +50,7 @@ export default function ManageBookings() {
         setLoading(false);
       }
     },
-    [token, selectedDate],
+    [token],
   );
 
   useEffect(() => {
@@ -63,9 +61,21 @@ export default function ManageBookings() {
     setShowDatePicker(Platform.OS === "ios");
     if (date) {
       setSelectedDate(date);
-      fetchBookings(date);
     }
   };
+
+  const filteredBookings = bookings.filter((item: any) => {
+    if (!selectedDate) return true; // Show all if no date selected
+    if (!item.scheduledDate) return false;
+    const bookingDate = new Date(item.scheduledDate);
+    
+    return (
+      bookingDate.getFullYear() === selectedDate.getFullYear() &&
+      bookingDate.getMonth() === selectedDate.getMonth() &&
+      bookingDate.getDate() === selectedDate.getDate()
+    );
+  });
+
 
   const updateBookingStatus = async (bookingId: string, newStatus: string) => {
     try {
@@ -325,14 +335,22 @@ export default function ManageBookings() {
           onPress={() => setShowDatePicker(true)}
         >
           <Ionicons name="calendar-outline" size={20} color="#dc2626" />
-          <Text style={styles.dateText}>{selectedDate.toDateString()}</Text>
-          <Ionicons name="chevron-down" size={16} color="#6b7280" />
+          <Text style={styles.dateText}>
+            {selectedDate ? selectedDate.toDateString() : "All Appointments"}
+          </Text>
+          {selectedDate ? (
+            <TouchableOpacity onPress={() => setSelectedDate(null)} style={{ padding: 4 }}>
+              <Ionicons name="close-circle" size={20} color="#9ca3af" />
+            </TouchableOpacity>
+          ) : (
+            <Ionicons name="chevron-down" size={16} color="#6b7280" />
+          )}
         </TouchableOpacity>
       </View>
 
       {showDatePicker && (
         <DateTimePicker
-          value={selectedDate}
+          value={selectedDate || new Date()}
           mode="date"
           display="default"
           onChange={handleDateChange}
@@ -346,7 +364,7 @@ export default function ManageBookings() {
         </View>
       ) : (
         <FlatList
-          data={bookings}
+          data={filteredBookings}
           keyExtractor={(item) => item._id}
           renderItem={renderBookingItem}
           contentContainerStyle={styles.listContainer}

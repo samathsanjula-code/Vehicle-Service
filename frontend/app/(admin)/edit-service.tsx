@@ -129,6 +129,12 @@ export default function EditServiceScreen() {
       return;
     }
 
+    // Validation: Discount price must be less than original price
+    if (discountPrice && parseFloat(discountPrice) >= parseFloat(price)) {
+      Alert.alert('Invalid Discount', 'The discount price must be lower than the original price.');
+      return;
+    }
+
     try {
       setIsSaving(true);
       const newFeaturesArray = features.split(',').map(f => f.trim()).filter(f => f.length > 0);

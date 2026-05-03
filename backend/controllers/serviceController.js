@@ -26,6 +26,11 @@ const createService = async (req, res) => {
   try {
     const { name, category, price, discountPrice, description, features, icon } = req.body;
 
+    // Validation: Discount price must be less than original price
+    if (discountPrice && Number(discountPrice) >= Number(price)) {
+      return res.status(400).json({ msg: "Discount price must be less than the original price" });
+    }
+
     const service = await new Service({
       name,
       category,
@@ -50,6 +55,14 @@ const updateService = async (req, res) => {
     const service = await Service.findById(req.params.id);
     if (!service) return res.status(404).json({ msg: "Service not found" });
 
+    // Validation: Discount price must be less than original price
+    const finalPrice = price || service.price;
+    const finalDiscount = (discountPrice === null || discountPrice === undefined) ? service.discountPrice : discountPrice;
+    
+    if (finalDiscount && Number(finalDiscount) >= Number(finalPrice)) {
+      return res.status(400).json({ msg: "Discount price must be less than the original price" });
+    }
+
     if (name) service.name = name;
     if (category) service.category = category;
     if (price) service.price = price;
@@ -69,6 +82,7 @@ const updateService = async (req, res) => {
     res.status(500).json({ msg: "Server Error" });
   }
 };
+
 
 // DELETE service
 const deleteService = async (req, res) => {
