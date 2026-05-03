@@ -13,6 +13,7 @@ import { useAuth } from '../../context/AuthContext';
 
 const STATUS_STYLE: Record<string, { bg: string; text: string }> = {
   Confirmed: { bg: '#dcfce7', text: '#166534' },
+  Paid: { bg: '#dcfce7', text: '#166534' },
   Pending: { bg: '#fef9c3', text: '#854d0e' },
   'Pending Payment': { bg: '#fef3c7', text: '#d97706' },
   Completed: { bg: '#f3f4f6', text: '#374151' },
@@ -30,6 +31,8 @@ export default function AppointmentsScreen() {
     useCallback(() => {
       if (user) {
         loadBookings();
+      } else {
+        setUpcomingAppointments([]); // Clear list on logout
       }
     }, [user])
   );
@@ -142,7 +145,7 @@ export default function AppointmentsScreen() {
                     </ThemedText>
                     <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
                       <Text style={[styles.statusText, { color: statusStyle.text }]}>
-                        {appt.status}
+                        {appt.status === 'Confirmed' ? 'Paid' : appt.status}
                       </Text>
                     </View>
                   </View>
@@ -190,11 +193,27 @@ export default function AppointmentsScreen() {
                       </>
                     )}
                     {appt.status === 'Pending Payment' && (
-                      <Pressable
-                        style={({ pressed }) => [styles.actionBtnSecondary, pressed && { opacity: 0.85 }]}
-                        onPress={() => handleReschedule(appt)}>
-                        <Text style={styles.actionBtnSecondaryText}>Reschedule</Text>
-                      </Pressable>
+                      <View style={{ flexDirection: 'row', gap: 10, flex: 1 }}>
+                        <Pressable
+                          style={({ pressed }) => [styles.actionBtnPrimary, pressed && { opacity: 0.85 }]}
+                          onPress={() => router.push({
+                            pathname: '/payment',
+                            params: { 
+                              bookingId: appt._id,
+                              serviceType: Array.isArray(appt.serviceType) ? appt.serviceType.join(', ') : appt.serviceType,
+                              scheduledDate: appt.scheduledDate,
+                              scheduledTime: appt.scheduledTime,
+                              totalAmount: appt.price || 0
+                            }
+                          })}>
+                          <Text style={styles.actionBtnPrimaryText}>Pay Now</Text>
+                        </Pressable>
+                        <Pressable
+                          style={({ pressed }) => [styles.actionBtnSecondary, pressed && { opacity: 0.85 }]}
+                          onPress={() => handleReschedule(appt)}>
+                          <Text style={styles.actionBtnSecondaryText}>Reschedule</Text>
+                        </Pressable>
+                      </View>
                     )}
                   </View>
                 </View>

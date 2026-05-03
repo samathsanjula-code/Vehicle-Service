@@ -57,7 +57,7 @@ exports.getBookingById = async (req, res) => {
     
     // Check if user is authorized to view this booking
     const bookingCustomerId = booking.customerId._id ? booking.customerId._id.toString() : booking.customerId.toString();
-    if (bookingCustomerId !== req.user.id && !req.user.isAdmin) {
+    if (bookingCustomerId !== req.user.id.toString() && !req.user.isAdmin) {
       return res.status(403).json({ message: 'Not authorized to view this booking' });
     }
     
@@ -71,8 +71,15 @@ exports.getBookingById = async (req, res) => {
 // Get bookings by user ID
 exports.getBookingsByUser = async (req, res) => {
   try {
+    // Get the authenticated user ID from either 'id' or '_id'
+    const authenticatedUserId = req.user.id || req.user._id;
+
+    // Debugging IDs
+    console.log(`🔍 Booking Auth Check: Param ID [${req.params.userId}] | Auth User ID [${authenticatedUserId}]`);
+
     // Only allow users to fetch their own bookings, unless admin
-    if (req.params.userId !== req.user.id && !req.user.isAdmin) {
+    if (req.params.userId.toString() !== authenticatedUserId.toString() && !req.user.isAdmin) {
+      console.log("❌ Authorization failed for bookings fetch");
       return res.status(403).json({ message: 'Not authorized to view these bookings' });
     }
     
@@ -96,7 +103,7 @@ exports.updateBooking = async (req, res) => {
     }
     
     const bookingCustomerId = booking.customerId._id ? booking.customerId._id.toString() : booking.customerId.toString();
-    if (bookingCustomerId !== req.user.id && !req.user.isAdmin) {
+    if (bookingCustomerId !== req.user.id.toString() && !req.user.isAdmin) {
       return res.status(403).json({ message: 'Not authorized to update this booking' });
     }
     
@@ -123,7 +130,7 @@ exports.deleteBooking = async (req, res) => {
     }
     
     const bookingCustomerId = booking.customerId._id ? booking.customerId._id.toString() : booking.customerId.toString();
-    if (bookingCustomerId !== req.user.id && !req.user.isAdmin) {
+    if (bookingCustomerId !== req.user.id.toString() && !req.user.isAdmin) {
       return res.status(403).json({ message: 'Not authorized to delete this booking' });
     }
     

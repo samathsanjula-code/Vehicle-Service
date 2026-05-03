@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { Stack } from "expo-router";
 
 export default function AdminLayout() {
   return (
@@ -11,6 +11,7 @@ export default function AdminLayout() {
       <Stack.Screen name="manage-services" options={{ headerShown: false }} />
       <Stack.Screen name="edit-service" options={{ headerShown: false }} />
       <Stack.Screen name="manage-vehicles" options={{ headerShown: false }} />
+      <Stack.Screen name="manage-bookings" options={{ headerShown: false }} />
     </Stack>
   );
 }
