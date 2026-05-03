@@ -24,7 +24,8 @@ router.get('/', authMiddleware, async (req, res) => {
 // GET all vehicles for Admin (All users' vehicles)
 router.get("/admin/all", authMiddleware, async (req, res) => {
   try {
-    if (!req.user.isAdmin) {
+    const isAdmin = req.user.isAdmin === true || req.user.isAdmin === 'true';
+    if (!isAdmin) {
       return res.status(403).json({ message: "Access denied. Admin only." });
     }
     const vehicles = await Vehicle.find()

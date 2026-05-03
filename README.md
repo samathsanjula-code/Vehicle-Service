@@ -1,29 +1,25 @@
 # 🚗 MotoHub – Vehicle Service Mobile App
 
-A full-stack mobile application built with **Expo (React Native)** and a **Node.js + Express + MongoDB** backend.
+A full-stack mobile application built with **Expo (React Native)** and a **Node.js + Express + MongoDB** backend. This system manages vehicle service records, fleet management for admins, and service booking for customers.
 
 ---
 
 ## 📁 Project Structure
 
-```
-service/                  ← Expo mobile app (run this folder)
-├── app/                  ← Screens (file-based routing via Expo Router)
-│   ├── (auth)/           ← Login & Signup screens
-│   ├── (tabs)/           ← Main app tabs
-│   └── (admin)/          ← Admin dashboard
-├── backend/              ← Node.js + Express API server
-│   ├── middleware/        ← JWT auth middleware
-│   ├── models/            ← Mongoose schemas
+```text
+Vehicle-Service/
+├── frontend/              ← Expo mobile app (React Native)
+│   ├── app/               ← Screens (Expo Router)
+│   ├── components/        ← Reusable UI components
+│   ├── constants/         ← API endpoints & IP config (api.ts)
+│   └── context/           ← Auth state management
+├── backend/               ← Node.js + Express API server
+│   ├── controllers/       ← Business logic
+│   ├── models/            ← MongoDB / Mongoose schemas
 │   ├── routes/            ← API route handlers
-│   ├── server.js          ← Entry point
-│   ├── .env.example       ← ⚠️ Copy this to .env and fill in your values
-│   └── .env               ← ❌ NOT committed – create this yourself
-├── constants/
-│   └── api.ts             ← ⚠️ Change BASE_URL here to your PC's IP
-├── context/
-│   └── AuthContext.tsx    ← Auth state management
-└── ...
+│   └── middleware/        ← JWT Authentication
+├── start.bat              ← 🚀 One-click start script (Windows)
+└── README.md
 ```
 
 ---
@@ -31,7 +27,6 @@ service/                  ← Expo mobile app (run this folder)
 ## ✅ Prerequisites
 
 Make sure you have these installed:
-
 - [Node.js](https://nodejs.org/) (v18 or later)
 - [npm](https://www.npmjs.com/)
 - [Expo Go](https://expo.dev/go) app on your phone **or** an Android emulator
@@ -39,139 +34,96 @@ Make sure you have these installed:
 
 ---
 
-## 🚀 Getting Started (After Cloning)
+## 🚀 Getting Started
 
-### Step 1 – Clone the repo
+### ⚡ Option 1: The Fast Way (One-Click Start)
+If you are on Windows, this is the easiest way:
+1.  **Configure Backend:** Create a `.env` file in the `backend/` folder (see step 2b below).
+2.  **Install:** Run `npm install` inside both `frontend` and `backend` folders.
+3.  **Launch:** Double-click **`start.bat`** in the root folder. 
+    *   *It will auto-detect your IP and start both servers.*
 
+---
+
+### 🛠️ Option 2: Manual Step-by-Step
+
+#### Step 1 – Clone the repo
 ```bash
 git clone <your-repo-url>
-cd service
+cd Vehicle-Service
 ```
 
----
+#### Step 2 – Set up the Backend
+1. **Install dependencies:**
+   ```bash
+   cd backend
+   npm install
+   ```
+2. **Create your `.env` file:**
+   Copy the template and fill in your values:
+   ```env
+   MONGO_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/motohub
+   JWT_SECRET=any_long_secret_string
+   PORT=5000
+   ```
+3. **Start backend:** `npm run dev`
 
-### Step 2 – Set up the Backend
-
-#### 2a. Install backend dependencies
-
-```bash
-cd backend
-npm install
-```
-
-#### 2b. Create your `.env` file
-
-Copy the template and fill in your own values:
-
-```bash
-# Windows
-copy .env.example .env
-
-# Mac / Linux
-cp .env.example .env
-```
-
-Open `backend/.env` and fill in:
-
-```env
-MONGO_URI=mongodb+srv://<your-username>:<your-password>@<your-cluster>.mongodb.net/motohub
-JWT_SECRET=any_long_random_secret_string_here
-PORT=5000
-```
-
-> **MongoDB Atlas setup:**
-> 1. Go to [cloud.mongodb.com](https://cloud.mongodb.com) → Create a free cluster
-> 2. Database Access → Add a user with a password
-> 3. Network Access → Allow your IP (or `0.0.0.0/0` for development)
-> 4. Connect → Drivers → Copy the connection string and paste into `MONGO_URI`
-
-#### 2c. Start the backend server
-
-```bash
-npm run dev        # with auto-restart (nodemon)
-# or
-npm start          # without auto-restart
-```
-
-You should see:
-```
-✅ MongoDB connected successfully to Atlas
-🚀 MotoHub API server running on port 5000
-```
-
----
-
-### Step 3 – Set your PC's IP in the mobile app
-
-The mobile app needs to know your PC's local IP address to reach the backend.
-
-**Find your IP:**
-- **Windows:** Open Command Prompt → type `ipconfig` → look for **IPv4 Address**
-- **Mac/Linux:** Open Terminal → type `ifconfig` → look for **inet** under your Wi-Fi adapter
-
-Open **`constants/api.ts`** and update `BASE_URL`:
-
-```ts
-// constants/api.ts  ← THE ONLY FILE YOU NEED TO CHANGE
-export const BASE_URL = 'http://YOUR_PC_IP:5000';   // e.g. 'http://192.168.1.105:5000'
-```
-
-> ⚠️ Your phone and PC must be on the **same Wi-Fi network**.
-
----
-
-### Step 4 – Install mobile app dependencies
-
-From the `service/` root folder:
-
-```bash
-npm install
-```
-
----
-
-### Step 5 – Start the mobile app
-
-```bash
-npx expo start
-```
-
-Then:
-- Scan the QR code with **Expo Go** (Android/iOS)
-- Or press `a` to open in Android emulator
+#### Step 3 – Set up the Mobile App (Frontend)
+1. **Install dependencies:**
+   ```bash
+   cd ../frontend
+   npm install
+   ```
+2. **Set your PC's IP:**
+   Open **`frontend/constants/api.ts`** and update `DEFAULT_LOCAL_URL` with your PC's local IP (find it by running `ipconfig` in terminal).
+3. **Start Expo:** `npx expo start`
+4. **Run on phone:** Scan the QR code with **Expo Go**.
 
 ---
 
 ## 🔑 Default Admin Account
-
-An admin account is automatically created on first server start:
-
 | Field    | Value                  |
 |----------|------------------------|
 | Email    | `admin@motohub.com`    |
 | Password | `admin123`             |
 
-> Change these credentials after first login.
+---
+
+## 🔌 API Endpoints Summary
+
+### 🚘 Vehicle Management
+| METHOD | ENDPOINT | DESCRIPTION | AUTH |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/vehicles` | User's vehicle list | Yes |
+| GET | `/api/vehicles/admin/all` | Full fleet (Admin view) | Yes |
+| POST | `/api/vehicles` | Register new vehicle | Yes |
+| PUT | `/api/vehicles/:id` | Update vehicle | Yes |
+| DELETE | `/api/vehicles/:id` | Remove vehicle | Yes |
+
+### 🛠️ Service Catalog
+| METHOD | ENDPOINT | DESCRIPTION | AUTH |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/services` | List all services | No |
+| POST | `/api/services` | Add service | Yes (Admin) |
+| PUT | `/api/services/:id` | Update service | Yes (Admin) |
 
 ---
 
-## 🛠️ Common Issues
+## 🛠️ Common Issues & Fixes
 
 | Problem | Fix |
 |--------|-----|
-| **Network Error / Could not connect** | Wrong IP in `constants/api.ts` — update `BASE_URL` to your PC's IP |
-| **MongoDB connection failed** | Check `MONGO_URI` in `backend/.env` — ensure Atlas IP whitelist includes your IP |
-| **Port already in use** | Change `PORT` in `backend/.env` to another value (e.g. `5001`) and update `BASE_URL` accordingly |
-| **Expo QR code not working** | Make sure phone and PC are on the same Wi-Fi network |
+| **Infinite Loading** | Ensure phone and PC are on the same Wi-Fi. Check if IP in `api.ts` matches your current IP. |
+| **"Property user doesn't exist"** | Ensure you are using the latest code where `useAuth` destructuring is fixed. |
+| **Duplicate Reg Number** | Change the registration number. If it says 'licensePlate' is duplicate, restart the backend. |
+| **MongoDB Connection Failed** | Check your `MONGO_URI` and ensure Atlas IP Whitelist allows your connection. |
 
 ---
 
 ## 📦 Tech Stack
-
 | Layer | Technology |
 |-------|-----------|
-| Mobile App | Expo (React Native), Expo Router |
-| Backend | Node.js, Express.js |
-| Database | MongoDB Atlas (Mongoose ODM) |
-| Auth | JWT (JSON Web Tokens) + bcryptjs |
-| Styling | React Native StyleSheet |
+| Mobile App | Expo (React Native), Expo Router, Axios |
+| Backend | Node.js, Express.js, JWT |
+| Database | MongoDB Atlas, Mongoose |
+| Styling | Custom CSS-like StyleSheet (Card-based UI) |

@@ -66,7 +66,7 @@ export default function AddVehicleScreen() {
   const [images, setImages] = useState<string[]>([]);
 
   const [loading, setLoading] = useState(false);
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   // Load existing data if editing
   useEffect(() => {
@@ -201,7 +201,21 @@ export default function AddVehicleScreen() {
         Alert.alert(
           'Success',
           isEditing ? 'Vehicle updated successfully!' : 'Vehicle added to your fleet!',
-          [{ text: 'View Fleet', onPress: () => router.replace('/service-history') }]
+          [{ 
+            text: 'OK', 
+            onPress: () => {
+              if (user?.isAdmin) {
+                router.replace('/(admin)/manage-vehicles');
+              } else {
+                // Go back to the previous screen (e.g., Fleet list or Home)
+                if (router.canGoBack()) {
+                  router.back();
+                } else {
+                  router.replace('/(tabs)/home');
+                }
+              }
+            } 
+          }]
         );
       } else {
         // This will show the actual message from the backend
