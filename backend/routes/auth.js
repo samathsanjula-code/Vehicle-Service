@@ -48,7 +48,6 @@ router.post('/register', async (req, res) => {
         fullName: newUser.fullName,
         email: newUser.email,
         phone: newUser.phone,
-        loyaltyPoints: newUser.loyaltyPoints,
       },
     });
   } catch (err) {
@@ -88,7 +87,7 @@ router.post('/login', async (req, res) => {
 
     // Generate JWT
     const token = jwt.sign(
-      { id: user._id, email: user.email, fullName: user.fullName },
+      { id: user._id, email: user.email, fullName: user.fullName, isAdmin: user.isAdmin },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -104,7 +103,6 @@ router.post('/login', async (req, res) => {
         email: user.email,
         phone: user.phone,
         isAdmin: user.isAdmin,
-        loyaltyPoints: user.loyaltyPoints,
       },
     });
   } catch (err) {
@@ -120,7 +118,16 @@ router.get('/me', authMiddleware, async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }
-    return res.status(200).json({ user });
+    return res.status(200).json({
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone,
+        isAdmin: user.isAdmin,
+        loyaltyPoints: user.loyaltyPoints || 0
+      }
+    });
   } catch (err) {
     console.error('❌ /me error:', err.message);
     return res.status(500).json({ message: 'Server error.' });
