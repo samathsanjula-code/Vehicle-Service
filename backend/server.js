@@ -46,47 +46,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: err.message || 'Internal server error' });
 });
 
-// ─── Database Connection ──────────────────────────────────────────────────────
-// mongoose
-//   .connect(process.env.MONGO_URI, {
-//     // මේ options ටික දැම්මම connection එකේ අවුලක් තිබ්බොත් ඉක්මනට error එකක් දෙනවා
-//     serverSelectionTimeoutMS: 5000, 
-//     socketTimeoutMS: 45000,
-//   })
-//   .then(async () => {
-//     console.log('✅ MongoDB connected successfully to Atlas');
-    
-//     // Seed Admin
-//     try {
-//       const adminAcc = await User.findOne({ email: 'admin@motohub.com' });
-//       if (!adminAcc) {
-//         // මෙතන passwordHash එකට 'admin123' දාද්දී bcrypt එකෙන් hash කරලා නේද දාන්නේ? 
-//         // නැත්නම් login වෙද්දී අවුල් යයි.
-//         await User.create({
-//           fullName: 'System Admin',
-//           email: 'admin@motohub.com',
-//           phone: '0000000000',
-//           passwordHash: 'admin123', 
-//           isAdmin: true
-//         });
-//         console.log('✅ Admin account seeded');
-//       }
-//     } catch (e) {
-//       console.log('❌ Seeding failure:', e.message);
-//     }
 
-//     app.listen(PORT, '0.0.0.0', () => {
-//       // මෙතන IP එක GFගේ ලැප් එකේ එක නේද (192.168.1.150)? ඒක මාරු කරපන්.
-//       console.log(`🚀 API server running on port: ${PORT}`);
-//     });
-//   })
-//   .catch((err) => {
-//     console.error('❌ MongoDB connection failed!');
-//     console.error('--- Full Error Details ---');
-//     console.error(err); // මෙතන තමයි නියම ලෙඩේ බලාගන්න පුළුවන් වෙන්නේ
-//     console.error('---------------------------');
-//     process.exit(1);
-//   });
 mongoose
   .connect(process.env.MONGO_URI)
   .then(async () => {
