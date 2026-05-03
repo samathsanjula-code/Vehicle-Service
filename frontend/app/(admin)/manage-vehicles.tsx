@@ -31,9 +31,11 @@ export default function ManageVehiclesScreen() {
       
       if (res.ok) {
         const data = await res.json();
+        console.log("✅ Admin fleet data fetched:", data.length, "vehicles found.");
         setVehicles(data);
       } else {
         const err = await res.json();
+        console.error("❌ Admin fleet fetch failed:", err);
         Alert.alert("Error", err.message || "Could not fetch vehicles");
       }
     } catch (e) {
