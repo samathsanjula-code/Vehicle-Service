@@ -20,7 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { API } from '@/constants/api';
+import { API } from '../constants/api';
 import { useAuth } from '../context/AuthContext';
 
 // ─── Constants ────────────────────────────────────────────────────────────────

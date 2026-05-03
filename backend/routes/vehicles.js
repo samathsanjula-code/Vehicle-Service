@@ -1,6 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const Vehicle = require('../models/Vehicle');
+
+// Drop the problematic old index if it exists
+Vehicle.collection.dropIndex('licensePlate_1').catch(err => {
+  // If the index doesn't exist, it's fine, just ignore the error
+  if (err.codeName !== 'IndexNotFound') {
+    console.log('Note: licensePlate index check -', err.message);
+  }
+});
 const authMiddleware = require('../middleware/auth');
 
 // GET all vehicles for the logged-in user
@@ -56,7 +64,13 @@ router.post('/', authMiddleware, async (req, res) => {
 
     // Safety check: ensure required vehicleDetails exist
     if (!vehicleDetails || !vehicleDetails.brand || !vehicleDetails.model || !vehicleDetails.regNumber || !vehicleDetails.category) {
-      return res.status(400).json({ message: 'Missing required vehicle information (Category, Brand, Model, or Reg Number)' });
+      console.log("❌ Validation failed. Missing fields:", { 
+        category: vehicleDetails?.category,
+        brand: vehicleDetails?.brand,
+        model: vehicleDetails?.model,
+        regNumber: vehicleDetails?.regNumber 
+      });
+      return res.status(400).json({ message: 'Missing required information: Brand, Model, Reg Number, and Category are mandatory.' });
     }
 
     const newVehicle = new Vehicle({
@@ -70,14 +84,14 @@ router.post('/', authMiddleware, async (req, res) => {
     console.log('✅ Vehicle saved successfully:', savedVehicle._id);
     res.status(201).json(savedVehicle);
   } catch (err) {
-    if (err.code === 11000) return res.status(400).json({ message: 'Vehicle with this Registration Number already exists.' });
-    
-    // LOG THE FULL ERROR TO A FILE SO I CAN READ IT
-    const fs = require('fs');
-    const errorData = `\n--- ERROR at ${new Date().toISOString()} ---\n${err.stack}\n${JSON.stringify(err, null, 2)}\n`;
-    fs.appendFileSync('./error_log.txt', errorData);
-
-    console.error('❌ POST ERROR:', err.message);
+    console.error('❌ POST ERROR:', err);
+    if (err.code === 11000) {
+      const field = Object.keys(err.keyValue)[0];
+      const value = err.keyValue[field];
+      return res.status(400).json({ 
+        message: `Duplicate Error: The ${field} '${value}' is already registered. Please use a different one.` 
+      });
+    }
     res.status(500).json({ message: err.message || 'Server error while saving vehicle' });
   }
 });

@@ -4,12 +4,14 @@
 //     For Local: It defaults to your current LAN IP.
 // ─────────────────────────────────────────────────────────────
 
-const PRODUCTION_URL = process.env.EXPO_PUBLIC_PRODUCTION_URL || "https://vehicle-service-1-9z14.onrender.com";
+const PRODUCTION_URL =
+  process.env.EXPO_PUBLIC_PRODUCTION_URL ||
+  "https://vehicle-service-1-9z14.onrender.com";
 const DEFAULT_LOCAL_URL = 'http://192.168.1.5:5000';
 
 // Auto-switch: Use local IP in development, Render URL in production
-export const BASE_URL = __DEV__ 
-  ? (process.env.EXPO_PUBLIC_BASE_URL || DEFAULT_LOCAL_URL)
+export const BASE_URL = __DEV__
+  ? process.env.EXPO_PUBLIC_BASE_URL || DEFAULT_LOCAL_URL
   : PRODUCTION_URL;
 
 export const API = {
