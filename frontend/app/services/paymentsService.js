@@ -1,22 +1,12 @@
 import axios from "axios";
-import Constants from "expo-constants";
-
-// Auto-detect the server IP from Expo's Metro host (always correct regardless of network).
-// Falls back to localhost for web/simulator.
-const getApiUrl = () => {
-  const hostUri = Constants.expoConfig?.hostUri?.split(":")?.[0];
-  if (hostUri) return `http://${hostUri}:5001/api`;
-  return "http://localhost:5001/api";
-};
-
-const API_BASE_URL = getApiUrl();
+import { API_BASE_URL } from "../../constants/api";
 
 const API = axios.create({
   baseURL: `${API_BASE_URL}/payments`,
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 8000, // 8 seconds — fail fast and show a clear error
+  timeout: 8000,
 });
 
 // Request interceptor — log outgoing requests in dev

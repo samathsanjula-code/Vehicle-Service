@@ -34,13 +34,18 @@ app.use("/api/payments", paymentRoutes);
 mongoose
   .connect(process.env.MONGO_URI, { family: 4 })
   .then(() => {
-    console.log("MongoDB connected successfully");
-
     app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Server running on port ${PORT}`);
+      console.log("\n========================================");
+      console.log("  ✅ MongoDB connected successfully");
+      console.log(`  🚀 Server running on port ${PORT}`);
+      console.log(`  📡 URL: http://localhost:${PORT}`);
+      console.log("========================================\n");
     });
   })
   .catch((error) => {
-    console.error("MongoDB connection error:", error.message);
+    console.error("\n========================================");
+    console.error("  ❌ MongoDB connection FAILED");
+    console.error(`  Error: ${error.message}`);
+    console.error("========================================\n");
     process.exit(1);
   });
