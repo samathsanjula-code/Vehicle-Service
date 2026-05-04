@@ -15,7 +15,7 @@ export default function AdminDashboard() {
       // Fetch mechanics for stats
       const fetchMechanics = async () => {
         try {
-          const res = await fetch('http://192.168.1.150:5000/api/mechanics', { // UPDATE IP TO YOURS
+          const res = await fetch('http://192.168.2.96:5000/api/mechanics', { // UPDATE IP TO YOURS
             headers: { Authorization: `Bearer ${token}` }
           });
           if (res.ok) {

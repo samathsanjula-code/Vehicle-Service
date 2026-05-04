@@ -70,7 +70,7 @@ mongoose
     }
 
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 API server: http:/192.168.1.150${PORT}`);
+      console.log(`🚀 API server: http:/192.168.2.96${PORT}`);
     });
   })
   .catch((err) => {

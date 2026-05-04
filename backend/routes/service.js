@@ -18,12 +18,13 @@ const storage = multer.diskStorage({
   }
 });
 
+// initialize multer and pass the storage configuration, so it knows how to store uploaded files
 const upload = multer({ 
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 } 
 });
 
-
+//add record user side
 router.post('/add', auth, upload.single('billImage'), async (req, res) => {
   try {
     const { vehicleNumber, serviceType, mileage, description, cost } = req.body;
